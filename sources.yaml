@@ -1,0 +1,15 @@
+sources:
+  - id: openai
+    name: OpenAI
+    lane: frontier_primitives
+    type: rss_or_html
+    urls:
+      - https://openai.com/news/
+    enabled: true
+
+  - id: manual
+    name: Manual Inputs
+    lane: manual
+    type: manual
+    path: data/raw/manual
+    enabled: true
