@@ -27,8 +27,12 @@ def test_ci_workflow_uses_minimum_permissions_and_locked_dependency_install() ->
     workflow_text = WORKFLOW_PATH.read_text()
 
     assert workflow["permissions"] == {"contents": "read"}
-    assert "actions/setup-node@v4" in workflow_text
+    assert "actions/checkout@v6" in workflow_text
+    assert "actions/setup-python@v6" in workflow_text
+    assert "actions/setup-node@v6" in workflow_text
     assert 'node-version: "22"' in workflow_text
+    assert "package-manager-cache: false" in workflow_text
+    assert "astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0" in workflow_text
     assert "uv sync --locked" in workflow_text
     assert "uv run pytest" in workflow_text
 
