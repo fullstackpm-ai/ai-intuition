@@ -115,6 +115,8 @@ class NormalizedItem(BaseModel):
     degraded_reason: str | None = None
     duplicate_line_ratio: float = 0.0
     boilerplate_ratio: float = 0.0
+    fallback_attempts: list[str] = Field(default_factory=list)
+    selected_fallback: str | None = None
 
     @property
     def extraction_eligible(self) -> bool:

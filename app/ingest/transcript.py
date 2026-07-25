@@ -215,6 +215,8 @@ def write_transcript_raw_artifact(result: TranscriptResult, source: Source, raw_
             "classification_confidence": 0.9,
             "classification_signals": ["usetranscribe_transcript"],
             "quality_status": "usable",
+            "fallback_attempts": ["youtube_usetranscribe"],
+            "selected_fallback": "youtube_usetranscribe",
         },
         body,
     )
@@ -245,6 +247,8 @@ def write_transcript_raw_artifact(result: TranscriptResult, source: Source, raw_
             "classification_confidence": 0.9,
             "classification_signals": ["usetranscribe_transcript"],
             "quality_status": "usable",
+            "fallback_attempts": ["youtube_usetranscribe"],
+            "selected_fallback": "youtube_usetranscribe",
         },
     )
 

@@ -114,7 +114,12 @@ def discover_rss_or_html(source: Source, window: DateWindow, limit: int = 10) ->
                         url=str(link),
                         item_type="article",
                         published_at=published_at,
-                        metadata={"discovered_via": url, "adapter": "rss_or_html"},
+                        metadata={
+                            "discovered_via": url,
+                            "adapter": "rss_or_html",
+                            "authorized_full_feed": bool(source.rss_url_env and url != source.rss_url),
+                            "full_feed_content": _entry_full_content(entry),
+                        },
                     )
                 )
                 if len(discovered) >= limit:
@@ -454,6 +459,16 @@ def _entry_audio_url(entry: object) -> str | None:
         enclosure_type = enclosure.get("type") if hasattr(enclosure, "get") else None
         if href and (not enclosure_type or str(enclosure_type).startswith("audio/")):
             return str(href)
+    return None
+
+
+def _entry_full_content(entry: object) -> str | None:
+    content = getattr(entry, "content", None)
+    if content:
+        for candidate in content:
+            value = candidate.get("value") if hasattr(candidate, "get") else None
+            if value and str(value).strip():
+                return str(value)
     return None
 
 

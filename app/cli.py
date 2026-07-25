@@ -234,6 +234,25 @@ def _run_normalize(store: StateStore, since: str = "7d", item: str | None = None
     count = 0
     for artifact in store.list_raw(item):
         normalized = normalize_raw_artifact(artifact, DATA_DIR / "normalized")
+        artifact.metadata.update(
+            {
+                "detected_page_type": normalized.detected_page_type,
+                "primary_content_kind": normalized.primary_content_kind,
+                "selected_normalizer": normalized.selected_normalizer,
+                "classification_confidence": normalized.classification_confidence,
+                "classification_signals": normalized.classification_signals,
+                "quality_status": normalized.quality_status,
+                "quality_flags": normalized.quality_flags,
+                "degraded_reason": normalized.degraded_reason,
+                "word_count": normalized.word_count,
+                "duplicate_line_ratio": normalized.duplicate_line_ratio,
+                "boilerplate_ratio": normalized.boilerplate_ratio,
+                "fallback_attempts": normalized.fallback_attempts,
+                "selected_fallback": normalized.selected_fallback,
+                "extraction_notes": normalized.extraction_notes,
+            }
+        )
+        store.upsert_raw(artifact)
         store.upsert_normalized(normalized)
         count += 1
         if run_context:
@@ -255,6 +274,8 @@ def _run_normalize(store: StateStore, since: str = "7d", item: str | None = None
                     "duplicate_line_ratio": normalized.duplicate_line_ratio,
                     "boilerplate_ratio": normalized.boilerplate_ratio,
                     "word_count": normalized.word_count,
+                    "fallback_attempts": normalized.fallback_attempts,
+                    "selected_fallback": normalized.selected_fallback,
                 },
             )
             run_context.record_artifact("normalize", normalized.normalized_path, normalized.id, True)

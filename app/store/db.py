@@ -121,6 +121,13 @@ class StateStore:
         return row is not None
 
     def upsert_raw(self, artifact: RawArtifact) -> bool:
+        existing_row = self.conn.execute(
+            "SELECT payload_json FROM raw_artifacts WHERE content_hash = ?",
+            (artifact.content_hash,),
+        ).fetchone()
+        if existing_row is not None:
+            existing = RawArtifact.model_validate_json(existing_row["payload_json"])
+            artifact = artifact.model_copy(update={"metadata": {**existing.metadata, **artifact.metadata}})
         with self.conn:
             cursor = self.conn.execute(
                 """

@@ -328,3 +328,56 @@ def test_extract_skips_rejected_normalized_artifacts_with_diagnostics(tmp_path, 
     assert len(skipped) == 1
     assert skipped[0].metadata["quality_status"] == "rejected"
     assert skipped[0].metadata["quality_flags"] == ["paywall_dominant"]
+
+
+def test_normalize_quality_event_includes_fallback_diagnostics(tmp_path, monkeypatch) -> None:
+    data_dir = tmp_path / "data"
+    db_path = data_dir / "state.sqlite3"
+    raw_path = data_dir / "raw/lab-posts/example.html"
+    raw_path.parent.mkdir(parents=True)
+    raw_path.write_text("<html><body><p>" + " ".join(["article"] * 300) + "</p></body></html>")
+    artifact = RawArtifact(
+        id="fallback-example",
+        source_id="example",
+        source_name="Example",
+        source_type="html",
+        lane="frontier_primitives",
+        title="Example",
+        url="https://example.com/article",
+        discovered_at=datetime(2026, 7, 25, tzinfo=UTC),
+        raw_path=str(raw_path),
+        content_hash="fallback-hash",
+        metadata={
+            "detected_page_type": "article_page",
+            "primary_content_kind": "article_body",
+            "selected_normalizer": "generic_html_fallback",
+            "classification_confidence": 0.4,
+            "classification_signals": ["generic_html_fallback"],
+            "quality_flags": ["generic_fallback_used"],
+            "fallback_attempts": ["generic_html_fallback"],
+            "selected_fallback": "generic_html_fallback",
+        },
+    )
+    monkeypatch.setattr(cli, "DATA_DIR", data_dir)
+    monkeypatch.setattr(cli, "DB_PATH", db_path)
+    context = RunContext("normalize", data_dir, run_id="fallback-diagnostics")
+    context.start()
+    store = StateStore(db_path)
+    try:
+        store.upsert_raw(artifact)
+        cli._run_normalize(store, run_context=context)
+    finally:
+        store.close()
+
+    event = next(event for event in context.events if event.event_type == "quality_checked")
+    assert event.metadata["fallback_attempts"] == ["generic_html_fallback"]
+    assert event.metadata["selected_fallback"] == "generic_html_fallback"
+
+    store = StateStore(db_path)
+    try:
+        stored_raw = store.list_raw("fallback-example")[0]
+    finally:
+        store.close()
+    assert stored_raw.metadata["quality_status"] == "usable"
+    assert stored_raw.metadata["word_count"] == 300
+    assert stored_raw.metadata["selected_fallback"] == "generic_html_fallback"

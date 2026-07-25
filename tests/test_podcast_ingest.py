@@ -100,4 +100,5 @@ def test_lenny_newsletter_article_uses_first_party_substack_transcript_before_sh
     assert len(artifacts) == 1
     assert artifacts[0].source_type == "podcast_transcript"
     assert artifacts[0].metadata["transcript_provider"] == "substack_media"
+    assert artifacts[0].metadata["selected_fallback"] == "substack_transcript_json"
     assert "Claire Vo:" in Path(artifacts[0].raw_path).read_text()

@@ -56,6 +56,8 @@ def ingest_substack_transcript_url(
             "classification_confidence": 0.8,
             "classification_signals": ["visible_transcript_section"],
             "quality_status": "usable",
+            "fallback_attempts": ["substack_visible_transcript"],
+            "selected_fallback": "substack_visible_transcript",
         },
         markdown,
     )
@@ -79,6 +81,8 @@ def ingest_substack_transcript_url(
             "classification_confidence": 0.8,
             "classification_signals": ["visible_transcript_section"],
             "quality_status": "usable",
+            "fallback_attempts": ["substack_visible_transcript"],
+            "selected_fallback": "substack_visible_transcript",
         },
     )
 
@@ -110,6 +114,8 @@ def ingest_substack_media_transcript_url(
         "classification_confidence": 0.95,
         "classification_signals": ["substack_media_transcript_metadata", candidate.source_kind],
         "quality_status": "usable",
+        "fallback_attempts": [f"substack_{candidate.source_kind}"],
+        "selected_fallback": f"substack_{candidate.source_kind}",
     }
     write_markdown(destination, metadata, markdown)
     return RawArtifact(

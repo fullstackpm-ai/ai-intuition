@@ -7,7 +7,8 @@ from urllib.parse import urlparse
 import httpx
 
 from app.ingest.discovery import DateWindow, DiscoveredItem, discover_source
-from app.ingest.html import ingest_html_url, write_html_raw_artifact
+from app.ingest.adapters import select_html_adapter
+from app.ingest.html import ingest_html_url, write_html_raw_artifact, write_markdown_raw_artifact
 from app.ingest.substack import (
     extract_substack_transcript_candidates,
     extract_youtube_urls_from_substack_html,
@@ -34,6 +35,22 @@ def ingest_discovered_articles(
             if _should_try_substack_media_pipeline(source, item):
                 artifacts.append(_ingest_substack_article_or_media(source, item, raw_root, run_context))
                 continue
+            decision = select_html_adapter(source, item)
+            metadata = {key: value for key, value in item.metadata.items() if key != "full_feed_content"}
+            metadata.update(decision.metadata)
+            if decision.use_feed_content:
+                artifacts.append(
+                    write_markdown_raw_artifact(
+                        source,
+                        item.url,
+                        str(item.metadata["full_feed_content"]),
+                        raw_root,
+                        title=item.title,
+                        published_at=item.published_at,
+                        metadata=metadata,
+                    )
+                )
+                continue
             artifacts.append(
                 ingest_html_url(
                     source,
@@ -41,7 +58,7 @@ def ingest_discovered_articles(
                     raw_root,
                     title=item.title,
                     published_at=item.published_at,
-                    metadata=item.metadata,
+                    metadata=metadata,
                 )
             )
         except httpx.HTTPStatusError as exc:

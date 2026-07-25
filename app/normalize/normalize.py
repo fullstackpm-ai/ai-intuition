@@ -25,17 +25,21 @@ PAYWALL_MARKERS = (
 )
 
 
-def _html_to_text(html: str) -> str:
+def _html_to_text(html: str, source_id: str | None = None) -> str:
     soup = BeautifulSoup(html, "html.parser")
     for node in soup(["script", "style", "nav", "footer"]):
         node.decompose()
+    if source_id == "google_research_blog":
+        for node in soup.select("aside, [aria-label*='share' i], [class*='share' i], [class*='related' i]"):
+            node.decompose()
     title = soup.find("title")
     pieces = []
     if title and title.get_text(strip=True):
         pieces.append(f"# {title.get_text(strip=True)}")
+    content_root = soup.find("article") if source_id == "google_research_blog" else soup
     text = "\n\n".join(
         block.get_text(" ", strip=True)
-        for block in soup.find_all(["h1", "h2", "h3", "p", "li"])
+        for block in content_root.find_all(["h1", "h2", "h3", "p", "li"])
         if block.get_text(" ", strip=True)
     )
     pieces.append(text)
@@ -54,7 +58,7 @@ def normalize_raw_artifact(artifact: RawArtifact, output_root: Path) -> Normaliz
         html = raw_path.read_text()
         if artifact.source_id == "lenny_newsletter":
             metadata = {**_lenny_legacy_html_metadata(html), **metadata}
-        text = _html_to_text(html)
+        text = _html_to_text(html, artifact.source_id)
         notes = "html via BeautifulSoup"
     text, quality_metrics = _clean_and_score_text(artifact, text.strip(), metadata)
     quality = _quality_metadata(artifact, text, metadata, quality_metrics, notes)
@@ -104,7 +108,7 @@ def _clean_and_score_text(artifact: RawArtifact, text: str, metadata: dict[str, 
     boilerplate_count = 0
     stop_at_related = False
     for line in nonempty:
-        if artifact.source_id == "google_research_blog" and line in {"Other posts of interest", "Labels:"}:
+        if artifact.source_id == "google_research_blog" and _is_google_research_boilerplate(line):
             stop_at_related = True
         if stop_at_related:
             boilerplate_count += 1
@@ -127,6 +131,19 @@ def _clean_and_score_text(artifact: RawArtifact, text: str, metadata: dict[str, 
         "duplicate_line_ratio": round(duplicate_line_ratio, 3),
         "boilerplate_ratio": round(boilerplate_ratio, 3),
     }
+
+
+def _is_google_research_boilerplate(line: str) -> bool:
+    normalized = " ".join(line.split()).lower()
+    return normalized in {
+        "quick links",
+        "share copy link",
+        "copy link",
+        "share",
+        "other posts of interest",
+        "labels:",
+        "related posts",
+    } or normalized.startswith(("quick links ", "share copy link ", "other posts of interest", "labels:"))
 
 
 def _lenny_legacy_html_metadata(html: str) -> dict[str, Any]:
@@ -163,13 +180,16 @@ def _quality_metadata(
     quality_flags = list(metadata.get("quality_flags") or [])
     quality_status = metadata.get("quality_status") or "usable"
     degraded_reason = metadata.get("degraded_reason")
+    fallback_attempts = [str(value) for value in metadata.get("fallback_attempts") or []]
+    selected_fallback = metadata.get("selected_fallback")
     word_count = len(text.split())
 
     if metrics["duplicate_line_ratio"] > 0.15:
         quality_flags.append("duplicate_line_ratio_high")
     if metrics["boilerplate_ratio"] > 0.30:
         quality_flags.append("boilerplate_ratio_high")
-    if any(marker in text for marker in PAYWALL_MARKERS):
+    paywall_marker_count = sum(marker in text for marker in PAYWALL_MARKERS)
+    if artifact.source_id == "stratechery" and (paywall_marker_count >= 2 or (paywall_marker_count and word_count < 500)):
         detected_page_type = "partial_paywalled_page"
         primary_content_kind = "paywall_copy"
         selected_normalizer = "stratechery_paywall_detector"
@@ -194,6 +214,8 @@ def _quality_metadata(
         "degraded_reason": degraded_reason,
         "duplicate_line_ratio": metrics["duplicate_line_ratio"],
         "boilerplate_ratio": metrics["boilerplate_ratio"],
+        "fallback_attempts": fallback_attempts,
+        "selected_fallback": selected_fallback,
         "extraction_notes": notes,
     }
 

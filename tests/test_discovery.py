@@ -42,6 +42,37 @@ def test_rss_discovery_filters_by_window(monkeypatch) -> None:
     assert [item.title for item in items] == ["Fresh article"]
 
 
+def test_authorized_rss_discovery_preserves_full_feed_content(monkeypatch) -> None:
+    rss = """
+<rss><channel><item>
+  <title>Full strategy article</title>
+  <link>https://stratechery.com/2026/full-article</link>
+  <pubDate>Mon, 25 May 2026 12:00:00 GMT</pubDate>
+  <content:encoded xmlns:content="http://purl.org/rss/1.0/modules/content/"><![CDATA[<p>Full article body.</p>]]></content:encoded>
+</item></channel></rss>
+"""
+
+    def fake_get(*args, **kwargs):
+        return httpx.Response(200, text=rss, request=httpx.Request("GET", str(args[0])))
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+    source = Source(
+        id="stratechery",
+        name="Stratechery",
+        lane="strategy_value_capture",
+        type="strategy_newsletter",
+        adapter="rss_or_html",
+        rss_url="https://stratechery.com/feed/",
+        rss_url_env="STRATECHERY_PERSONAL_RSS_URL",
+        urls=["https://private.example.com/feed"],
+    )
+
+    items = discover_rss_or_html(source, DateWindow())
+
+    assert items[0].metadata["authorized_full_feed"] is True
+    assert items[0].metadata["full_feed_content"] == "<p>Full article body.</p>"
+
+
 def test_html_index_discovery_keeps_article_links(monkeypatch) -> None:
     html = """
 <html><body>

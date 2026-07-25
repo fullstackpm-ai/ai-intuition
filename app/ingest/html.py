@@ -4,9 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 import httpx
+from bs4 import BeautifulSoup
 
 from app.ids import content_hash, deterministic_id
 from app.models import RawArtifact, Source
+from app.store.files import write_markdown
 from app.time import now_utc
 
 
@@ -60,3 +62,51 @@ def write_html_raw_artifact(
         content_hash=digest,
         metadata=metadata or {},
     )
+
+
+def write_markdown_raw_artifact(
+    source: Source,
+    url: str,
+    body: str,
+    raw_root: Path,
+    title: str,
+    published_at: datetime | None = None,
+    metadata: dict[str, object] | None = None,
+) -> RawArtifact:
+    """Persist authorized feed content without refetching a potentially paywalled page."""
+    markdown_body = _feed_html_to_markdown(body)
+    digest = content_hash(markdown_body)
+    artifact_id = deterministic_id(source.id, title, published_at, markdown_body)
+    destination = raw_root / "strategy" / f"{artifact_id}.md"
+    raw_metadata = {
+        "source_id": source.id,
+        "title": title,
+        "url": url,
+        "published_at": published_at.isoformat() if published_at else None,
+        **(metadata or {}),
+    }
+    write_markdown(destination, raw_metadata, markdown_body)
+    return RawArtifact(
+        id=artifact_id,
+        source_id=source.id,
+        source_name=source.name,
+        lane=source.lane,
+        source_type="rss_full_content",
+        title=title,
+        url=url,
+        published_at=published_at,
+        discovered_at=now_utc(),
+        raw_path=str(destination),
+        content_hash=digest,
+        metadata=raw_metadata,
+    )
+
+
+def _feed_html_to_markdown(body: str) -> str:
+    soup = BeautifulSoup(body, "html.parser")
+    blocks = [
+        node.get_text(" ", strip=True)
+        for node in soup.find_all(["h1", "h2", "h3", "p", "li", "blockquote"])
+        if node.get_text(" ", strip=True)
+    ]
+    return "\n\n".join(blocks) if blocks else soup.get_text(" ", strip=True)
