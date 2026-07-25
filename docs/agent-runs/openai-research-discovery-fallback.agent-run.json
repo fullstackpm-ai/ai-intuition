@@ -2,43 +2,45 @@
   "agent_run_format_version": "0.1",
   "run_id": "openai-research-discovery-fallback-run",
   "agent": {
-    "name": "unknown"
+    "name": "Codex"
   },
   "product_spec": {
     "path": "docs/product-specs/openai-research-discovery-fallback.product-spec.md",
     "spec_revision": 1,
-    "content_hash": "sha256:ad8add6b886dbac68f3c1a14572b43335c85b6a5d52d00c08339aef629d69f52"
+    "content_hash": "sha256:38c3acd6d2185c3bb3f645ae358f2d1d781c440c2600458fcae3cb8ffe2db344"
   },
   "started_at": "2026-07-25T22:59:29.591Z",
-  "status": "draft",
+  "completed_at": "2026-07-25T23:20:00Z",
+  "status": "completed",
+  "summary": "Replaced the blocked OpenAI Research HTML-index discovery path with OpenAI's first-party News RSS feed and a deterministic Research-category adapter. The adapter admits only dated entries tagged Research, preserves RSS provenance and existing title/URL rules, records source-specific discovery diagnostics, and fails safely without a bypass when the feed is malformed or unavailable. Evidence: commit bc03498; uv run pytest tests/test_discovery.py tests/test_observability.py -> 26 passed; uv run pytest -> 86 passed; ProductSpec validation and graph checks passed; live 7-day discovery returned no candidates because no qualifying Research post was published in the window; live 30-day discovery returned the July 8 coding-evaluations post and June 30 GeneBench-Pro; GitHub Actions run 30178695930 completed successfully at https://github.com/fullstackpm-ai/ai-intuition/actions/runs/30178695930.",
   "checked_items": [
     {
       "item_id": "AC-1",
-      "status": "not_checked"
+      "status": "passed"
     },
     {
       "item_id": "AC-2",
-      "status": "not_checked"
+      "status": "passed"
     },
     {
       "item_id": "AC-3",
-      "status": "not_checked"
+      "status": "passed"
     },
     {
       "item_id": "AC-4",
-      "status": "not_checked"
+      "status": "passed"
     },
     {
       "item_id": "AC-5",
-      "status": "not_checked"
+      "status": "passed"
     },
     {
       "item_id": "AC-6",
-      "status": "not_checked"
+      "status": "passed"
     },
     {
       "item_id": "AC-7",
-      "status": "not_checked"
+      "status": "passed"
     },
     {
       "item_id": "SM-1",

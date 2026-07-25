@@ -3,11 +3,11 @@ spec_format_version: "0.1"
 title: "OpenAI Research Discovery Fallback"
 artifact_type: "prd"
 spec_revision: 1
-status: implementing
+status: accepted
 owner: akshay
 author: "Codex"
 created_at: "2026-07-25T23:00:00Z"
-updated_at: "2026-07-25T23:00:00Z"
+updated_at: "2026-07-25T23:20:00Z"
 applies_to:
   - path: app/ingest/discovery.py
   - path: app/cli.py
