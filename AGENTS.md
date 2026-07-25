@@ -45,6 +45,7 @@ Do not optimize for coverage. Optimize for surprise, mental-model impact, and re
 - Treat GitHub Actions CI as the hard remote gate for deterministic tests and ProductSpec validity. CI must stay credential-free and must not run weekly ingestion, live source discovery, transcribe calls, useTranscribe calls, or LLM/API extraction.
 - When changing pipeline behavior, source discovery, ingestion/transcripts, extraction, brief generation, belief updates, or artifact layout, wire the change into observability: run events, source/stage attempts, artifact write/unchanged events, failure classification, and run summaries where applicable. Add or update tests so failures remain diagnosable and regressions are caught.
 - Update living docs alongside code when behavior, commands, source policy, or artifact semantics change.
+- When creating or editing multiline GitHub issues/comments, do not pass escaped `\n` strings through `gh --body`. Use a multiline-safe path such as `--body-file -`, `--body-file <file>`, or `gh api` from a real multiline string, and verify rendered comments with `gh issue view --comments` after material updates.
 
 ## Quality bar
 

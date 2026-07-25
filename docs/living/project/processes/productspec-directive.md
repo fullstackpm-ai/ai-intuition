@@ -20,6 +20,8 @@ Use it when the change affects pipeline behavior, artifact semantics, extraction
 
 When the user says "add an issue", "create an issue", or otherwise asks to track work in GitHub, create a new GitHub issue in ProductSpec format.
 
+Create and update issue bodies/comments through a multiline-safe path. Do not pass escaped `\n` strings through `gh --body`; use `--body-file -`, `--body-file <file>`, or `gh api` from a real multiline string. After material issue/comment updates, inspect the result with `gh issue view --comments` so malformed Markdown, stripped inline code values, or literal escape sequences are caught immediately.
+
 The GitHub issue should include the same operating structure as a repo ProductSpec:
 
 - ProductSpec framing, including `spec_status`, `spec_revision`, `applies_to`, and related ProductSpec path when known
