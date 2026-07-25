@@ -9,6 +9,7 @@ from typer.testing import CliRunner
 
 from app import cli
 from app.ingest.discovery import DiscoveredItem
+from app.ingest.rss import ingest_discovered_articles
 from app.models import RawArtifact, Source
 from app.observability.run import RunContext, classify_exception
 from app.store.db import StateStore
@@ -116,7 +117,7 @@ def test_run_weekly_records_partial_success_and_packet_skips(tmp_path, monkeypat
             )
         ]
 
-    def fake_ingest_articles(source, items, raw_root):
+    def fake_ingest_articles(source, items, raw_root, run_context=None):
         raw_path = data_dir / "raw" / "lab-posts" / "good.html"
         raw_path.parent.mkdir(parents=True, exist_ok=True)
         raw_path.write_text("<html><title>Useful article</title><p>Agents need structured run logs.</p></html>")
@@ -192,7 +193,7 @@ def test_run_weekly_idempotent_artifact_events_on_second_run(tmp_path, monkeypat
             )
         ]
 
-    def fake_ingest_articles(source, items, raw_root):
+    def fake_ingest_articles(source, items, raw_root, run_context=None):
         raw_path = data_dir / "raw" / "lab-posts" / "good.html"
         raw_path.parent.mkdir(parents=True, exist_ok=True)
         raw_path.write_text("<html><title>Useful article</title><p>Same content.</p></html>")
@@ -226,3 +227,61 @@ def test_run_weekly_idempotent_artifact_events_on_second_run(tmp_path, monkeypat
     artifact_counts = [summary["artifact_counts"] for summary in summaries]
     assert any(counts.get("ingest_written") == 1 for counts in artifact_counts)
     assert any(counts.get("ingest_unchanged") == 1 and "extract_unchanged" in counts for counts in artifact_counts)
+
+
+def test_openai_news_ingest_skips_blocked_article_and_continues(tmp_path, monkeypatch) -> None:
+    source = Source(
+        id="openai_news",
+        name="OpenAI News",
+        lane="product_patterns",
+        type="lab_product_and_research_updates",
+        adapter="rss_or_html",
+        source_url="https://openai.com/news/",
+        rss_url="https://openai.com/news/rss.xml",
+    )
+    items = [
+        DiscoveredItem(
+            source_id=source.id,
+            title="Blocked OpenAI Article",
+            url="https://openai.com/index/blocked",
+            item_type="article",
+            published_at=datetime(2026, 7, 23, tzinfo=UTC),
+            metadata={"discovered_via": "https://openai.com/news/rss.xml"},
+        ),
+        DiscoveredItem(
+            source_id=source.id,
+            title="Fetchable OpenAI Article",
+            url="https://openai.com/index/fetchable",
+            item_type="article",
+            published_at=datetime(2026, 7, 22, tzinfo=UTC),
+            metadata={"discovered_via": "https://openai.com/news/rss.xml"},
+        ),
+    ]
+
+    def fake_get(url, **kwargs):
+        assert kwargs["headers"]["User-Agent"].startswith("ai-intuition-compiler/")
+        request = httpx.Request("GET", str(url))
+        if str(url).endswith("/blocked"):
+            return httpx.Response(403, request=request)
+        return httpx.Response(
+            200,
+            text="<html><title>Fetchable</title><p>OpenAI product systems need explicit contracts.</p></html>",
+            request=request,
+        )
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+    context = RunContext("test-openai-news", tmp_path / "data", run_id="openai-news-item-skip")
+    context.start()
+
+    artifacts = ingest_discovered_articles(source, items, tmp_path / "data/raw", run_context=context)
+
+    assert len(artifacts) == 1
+    assert artifacts[0].title == "Fetchable OpenAI Article"
+    assert artifacts[0].url == "https://openai.com/index/fetchable"
+
+    skipped = [event for event in context.events if event.event_type == "item_skipped"]
+    assert len(skipped) == 1
+    assert skipped[0].source_id == "openai_news"
+    assert skipped[0].url == "https://openai.com/index/blocked"
+    assert skipped[0].metadata["outcome"] == "blocked_auth"
+    assert skipped[0].metadata["retryability"] == "operator_action_required"

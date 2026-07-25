@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from urllib.parse import urlparse
 
 import httpx
 
@@ -14,22 +15,66 @@ from app.models import RawArtifact, Source
 from app.observability.run import RunContext, classify_exception
 
 
-def ingest_discovered_articles(source: Source, items: list[DiscoveredItem], raw_root: Path) -> list[RawArtifact]:
+def ingest_discovered_articles(
+    source: Source,
+    items: list[DiscoveredItem],
+    raw_root: Path,
+    run_context: RunContext | None = None,
+) -> list[RawArtifact]:
     artifacts: list[RawArtifact] = []
     for item in items:
         if item.item_type != "article":
             continue
-        artifacts.append(
-            ingest_html_url(
-                source,
-                item.url,
-                raw_root,
-                title=item.title,
-                published_at=item.published_at,
-                metadata=item.metadata,
+        try:
+            artifacts.append(
+                ingest_html_url(
+                    source,
+                    item.url,
+                    raw_root,
+                    title=item.title,
+                    published_at=item.published_at,
+                    metadata=item.metadata,
+                )
             )
-        )
+        except httpx.HTTPStatusError as exc:
+            if not _should_skip_blocked_article(source, item, exc):
+                raise
+            outcome, retryability, error = classify_exception(exc)
+            error.context = {
+                "source_id": source.id,
+                "article_url": item.url,
+                "discovered_via": item.metadata.get("discovered_via"),
+                "policy": "openai_news_blocked_article_item_skip",
+            }
+            if run_context:
+                run_context.event(
+                    "ingest",
+                    "item_skipped",
+                    "Skipped blocked OpenAI News article while continuing source ingest.",
+                    level="warning",
+                    source=source,
+                    url=item.url,
+                    metadata={
+                        "outcome": outcome,
+                        "retryability": retryability,
+                        "error": error.model_dump(mode="json"),
+                        "item": {
+                            "title": item.title,
+                            "url": item.url,
+                            "published_at": item.published_at.isoformat() if item.published_at else None,
+                        },
+                    },
+                )
+            console.print(f"[yellow]Skipped blocked OpenAI News article: {item.url}[/yellow]")
     return artifacts
+
+
+def _should_skip_blocked_article(source: Source, item: DiscoveredItem, exc: httpx.HTTPStatusError) -> bool:
+    if source.id != "openai_news":
+        return False
+    if exc.response.status_code not in {401, 403}:
+        return False
+    return urlparse(item.url).netloc.removeprefix("www.") == "openai.com"
 
 
 def ingest_discovered_podcast_pages(

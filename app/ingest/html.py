@@ -10,8 +10,11 @@ from app.models import RawArtifact, Source
 from app.time import now_utc
 
 
+HTTP_HEADERS = {"User-Agent": "ai-intuition-compiler/0.1 (+article ingest)"}
+
+
 def fetch_html(url: str) -> str:
-    response = httpx.get(url, follow_redirects=True, timeout=20)
+    response = httpx.get(url, follow_redirects=True, timeout=20, headers=HTTP_HEADERS)
     response.raise_for_status()
     return response.text
 

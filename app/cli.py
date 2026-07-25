@@ -133,6 +133,7 @@ def _run_ingest(
                 url=urls_attempted[0] if urls_attempted else None,
                 metadata={"urls_attempted": urls_attempted},
             )
+        event_start_index = len(run_context.events) if run_context else 0
         try:
             if adapter == "manual" or configured.type == "manual":
                 source_artifacts = ingest_manual_directory(configured, Path.cwd())
@@ -140,7 +141,7 @@ def _run_ingest(
             elif adapter in {"rss_or_html", "html_index"}:
                 discovered = discover_source(configured, window, limit=5)
                 item_count = len(discovered)
-                source_artifacts = ingest_discovered_articles(configured, discovered, DATA_DIR / "raw")
+                source_artifacts = ingest_discovered_articles(configured, discovered, DATA_DIR / "raw", run_context=run_context)
             elif adapter == "podcast_episode_page_or_youtube":
                 discovered = discover_source(configured, window, limit=5)
                 item_count = len(discovered)
@@ -176,8 +177,25 @@ def _run_ingest(
                 source_created += int(changed)
                 if run_context:
                     run_context.record_artifact("ingest", artifact.raw_path, artifact.id, changed)
-            outcome = "healthy_empty" if item_count == 0 and not source_artifacts else "success"
+            skipped_item_events = []
             if run_context:
+                skipped_item_events = [
+                    event
+                    for event in run_context.events[event_start_index:]
+                    if event.event_type == "item_skipped" and event.source_id == configured.id
+                ]
+            outcome = "healthy_empty" if item_count == 0 and not source_artifacts else "success"
+            retryability = "not_applicable"
+            if item_count > 0 and not source_artifacts and skipped_item_events:
+                outcome = "blocked_auth"
+                retryability = "operator_action_required"
+            if run_context:
+                metadata = {"created": source_created, "skipped_items": len(skipped_item_events)}
+                if skipped_item_events:
+                    metadata["skipped_item_urls"] = [event.url for event in skipped_item_events if event.url]
+                    metadata["skipped_item_outcomes"] = [
+                        event.metadata.get("outcome") for event in skipped_item_events if event.metadata.get("outcome")
+                    ]
                 run_context.record_source_attempt(
                     configured,
                     stage="ingest",
@@ -186,7 +204,8 @@ def _run_ingest(
                     artifact_count=len(source_artifacts),
                     elapsed_ms=_elapsed_ms(started),
                     outcome=outcome,
-                    metadata={"created": source_created},
+                    retryability=retryability,
+                    metadata=metadata,
                 )
         except Exception as exc:  # Network sources should not block weekly pipeline progress.
             console.print(f"[yellow]Skipped {configured.id}: {exc}[/yellow]")

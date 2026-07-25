@@ -29,6 +29,7 @@ EventType = Literal[
     "source_attempt_finished",
     "source_skipped",
     "source_failed",
+    "item_skipped",
     "artifact_written",
     "artifact_unchanged",
     "fallback_attempted",
