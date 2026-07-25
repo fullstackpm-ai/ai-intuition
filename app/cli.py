@@ -16,8 +16,9 @@ from app.ingest.rss import ingest_discovered_articles, ingest_discovered_podcast
 from app.ingest.transcript import UseTranscribeClient, write_transcript_raw_artifact
 from app.llm.belief_update import update_beliefs
 from app.llm.edit import edit_insights
-from app.llm.extract import build_extraction_packet, extract_insights, import_insights_from_json
+from app.llm.extract import build_extraction_packet, extract_insights, import_insights_from_json, load_insight_artifacts
 from app.llm.synthesize import build_weekly_brief
+from app.llm.synthesize import filter_insights_for_published_week, summarize_week_filter
 from app.logging import console
 from app.models import ExtractedInsight, Source
 from app.normalize.normalize import normalize_raw_artifact
@@ -259,10 +260,14 @@ def _run_edit(store: StateStore, since: str = "7d", run_context: RunContext | No
 
 def _run_brief(store: StateStore, week: str | None = None, current_week_flag: bool = False, run_context: RunContext | None = None) -> Path:
     target_week = current_week() if current_week_flag or not week else week
-    brief, path = build_weekly_brief(target_week, store.list_insights(), DATA_DIR / "briefs")
+    available_insights = _available_insights(store)
+    insights = filter_insights_for_published_week(available_insights, target_week)
+    week_filter = summarize_week_filter(available_insights, target_week)
+    brief, path = build_weekly_brief(target_week, insights, DATA_DIR / "briefs")
     source_attribution = {
         "source_attribution_summary": brief.source_attribution_summary,
         "source_attribution_warnings": brief.source_attribution_warnings,
+        "week_filter": week_filter,
     }
     store.log_run("brief", {"week": target_week, "path": str(path), **source_attribution})
     if run_context:
@@ -278,12 +283,21 @@ def _run_brief(store: StateStore, week: str | None = None, current_week_flag: bo
 
 def _run_belief_update(store: StateStore, week: str | None = None, current_week_flag: bool = False, run_context: RunContext | None = None) -> list[Path]:
     target_week = current_week() if current_week_flag or not week else week
-    touched = update_beliefs(target_week, store.list_insights(), DATA_DIR / "beliefs")
+    touched = update_beliefs(target_week, _insights_for_week(store, target_week), DATA_DIR / "beliefs")
     store.log_run("belief-update", {"week": target_week, "touched": [str(path) for path in touched]})
     if run_context:
         for path in touched:
             run_context.record_artifact("belief_update", str(path), path.stem, True)
     return touched
+
+
+def _available_insights(store: StateStore) -> list[ExtractedInsight]:
+    artifact_insights = load_insight_artifacts(DATA_DIR)
+    return artifact_insights or store.list_insights()
+
+
+def _insights_for_week(store: StateStore, week: str) -> list[ExtractedInsight]:
+    return filter_insights_for_published_week(_available_insights(store), week)
 
 
 @app.command()

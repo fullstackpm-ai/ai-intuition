@@ -4,12 +4,12 @@ import json
 from datetime import UTC, datetime
 
 from app import cli
-from app.llm.extract import import_insights_from_json
-from app.llm.synthesize import build_weekly_brief
+from app.llm.extract import import_insights_from_json, load_insight_artifacts
+from app.llm.synthesize import build_weekly_brief, filter_insights_for_published_week
 from app.models import Evidence, ExtractedInsight, NormalizedItem, SourceReference
 from app.observability import RunContext
 from app.store.db import StateStore
-from app.store.files import read_markdown, write_json
+from app.store.files import read_markdown, write_json, write_markdown
 
 
 def _insight(
@@ -175,6 +175,139 @@ def test_imported_extraction_infers_source_attribution_from_normalized_item(tmp_
     assert insight.raw_artifact_id == "raw_codex_loop"
     assert insight.normalized_path == "data/normalized/codex_loop.md"
     assert insight.published_at == datetime(2026, 1, 23, tzinfo=UTC)
+
+
+def test_legacy_extraction_artifact_recovers_published_date_from_normalized_item(tmp_path) -> None:
+    data_dir = tmp_path / "data"
+    write_markdown(
+        data_dir / "normalized" / "dwarkesh_may.md",
+        {
+            "id": "dwarkesh_may",
+            "raw_artifact_id": "raw_dwarkesh_may",
+            "source_id": "dwarkesh_podcast",
+            "source_name": "Dwarkesh Podcast",
+            "source_type": "podcast_transcript",
+            "lane": "frontier_priors",
+            "title": "Eric Jang - Building AlphaGo from scratch",
+            "url": "https://www.dwarkesh.com/p/eric-jang",
+            "published_at": "2026-05-15T16:04:58+00:00",
+            "raw_path": "data/raw/podcasts/dwarkesh_may.md",
+        },
+        "# Transcript\n",
+    )
+    write_json(
+        data_dir / "extracted" / "dwarkesh_may.json",
+        [
+            {
+                "id": "dwarkesh_may_insight_0",
+                "item_id": "dwarkesh_may",
+                "source_id": "dwarkesh_podcast",
+                "source_title": "Eric Jang - Building AlphaGo from scratch",
+                "source_url": "https://www.dwarkesh.com/p/eric-jang",
+                "lane": "frontier_priors",
+                "status": "accepted",
+                "claim": "Rebuilding systems reveals hidden constraints.",
+                "mechanism": "Implementation exposes choices hidden by paper-level summaries.",
+                "intuition_update": "Use rebuilds as a way to internalize AI systems.",
+                "mental_model": "Replication is embodied understanding.",
+                "evidence": [{"quote": "AlphaGo evidence.", "location": "transcript"}],
+                "confidence": "high",
+                "novelty": "high",
+                "mental_model_impact": "high",
+                "created_at": "2026-07-24T00:00:00-07:00",
+            }
+        ],
+    )
+
+    insights = load_insight_artifacts(data_dir)
+
+    assert insights[0].published_at == datetime(2026, 5, 15, 16, 4, 58, tzinfo=UTC)
+    assert insights[0].source_name == "Dwarkesh Podcast"
+    assert insights[0].source_type == "podcast_transcript"
+
+
+def test_week_filter_uses_published_at_not_extraction_created_at() -> None:
+    may_source_processed_in_week_30 = _insight(
+        "dwarkesh_may",
+        item_id="dwarkesh_may",
+        source_id="dwarkesh_podcast",
+        source_name="Dwarkesh Podcast",
+        source_type="podcast_transcript",
+        source_title="Eric Jang - Building AlphaGo from scratch",
+        source_url="https://www.dwarkesh.com/p/eric-jang",
+        published_at=datetime(2026, 5, 15, tzinfo=UTC),
+    )
+    july_source = _insight(
+        "anthropic_july",
+        item_id="anthropic_july",
+        published_at=datetime(2026, 7, 24, tzinfo=UTC),
+    )
+
+    selected = filter_insights_for_published_week([may_source_processed_in_week_30, july_source], "2026-W30")
+
+    assert [insight.id for insight in selected] == ["anthropic_july"]
+
+
+def test_brief_stage_loads_extraction_artifacts_and_filters_by_published_week(tmp_path, monkeypatch) -> None:
+    data_dir = tmp_path / "data"
+    store = StateStore(tmp_path / "state.sqlite3")
+    monkeypatch.setattr(cli, "DATA_DIR", data_dir)
+    try:
+        for item_id, title, published_at in [
+            ("dwarkesh_may", "Eric Jang - Building AlphaGo from scratch", "2026-05-15T16:04:58+00:00"),
+            ("anthropic_july", "Project Pilot", "2026-07-24T00:00:00+00:00"),
+        ]:
+            write_markdown(
+                data_dir / "normalized" / f"{item_id}.md",
+                {
+                    "id": item_id,
+                    "raw_artifact_id": f"raw_{item_id}",
+                    "source_id": "dwarkesh_podcast" if item_id == "dwarkesh_may" else "anthropic_research",
+                    "source_name": "Dwarkesh Podcast" if item_id == "dwarkesh_may" else "Anthropic Research",
+                    "source_type": "podcast_transcript" if item_id == "dwarkesh_may" else "lab_research",
+                    "lane": "frontier_priors",
+                    "title": title,
+                    "url": f"https://example.com/{item_id}",
+                    "published_at": published_at,
+                    "raw_path": f"data/raw/{item_id}.md",
+                },
+                "# Source\n",
+            )
+            write_json(
+                data_dir / "extracted" / f"{item_id}.json",
+                [
+                    {
+                        "id": f"{item_id}_insight_0",
+                        "item_id": item_id,
+                        "source_id": "dwarkesh_podcast" if item_id == "dwarkesh_may" else "anthropic_research",
+                        "source_title": title,
+                        "source_url": f"https://example.com/{item_id}",
+                        "lane": "frontier_priors",
+                        "status": "accepted",
+                        "claim": f"{title} has a durable lesson.",
+                        "mechanism": "Mechanism.",
+                        "intuition_update": f"Internalize {title}.",
+                        "mental_model": f"{title} model.",
+                        "evidence": [{"quote": "Evidence.", "location": "source"}],
+                        "confidence": "high",
+                        "novelty": "high",
+                        "mental_model_impact": "high",
+                        "extraction_method": "codex_packet",
+                        "created_at": "2026-07-24T00:00:00-07:00",
+                    }
+                ],
+            )
+
+        path = cli._run_brief(store, week="2026-W30")
+    finally:
+        store.close()
+
+    metadata, body = read_markdown(path)
+    assert metadata["accepted_insights"] == 1
+    assert metadata["source_attribution_summary"]["unique_source_artifacts"] == 1
+    assert metadata["source_references"][0]["title"] == "Project Pilot"
+    assert "Project Pilot" in body
+    assert "Eric Jang" not in body
 
 
 def test_brief_stage_records_source_attribution_observability(tmp_path, monkeypatch) -> None:

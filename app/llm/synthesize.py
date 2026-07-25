@@ -5,7 +5,7 @@ from pathlib import Path
 
 from app.models import ExtractedInsight, SourceReference, WeeklyBrief
 from app.store.files import write_markdown
-from app.time import now_utc
+from app.time import is_in_week, now_utc
 
 
 def build_weekly_brief(week: str, insights: list[ExtractedInsight], output_dir: Path) -> tuple[WeeklyBrief, Path]:
@@ -78,6 +78,21 @@ def build_weekly_brief(week: str, insights: list[ExtractedInsight], output_dir: 
         body,
     )
     return brief, destination
+
+
+def filter_insights_for_published_week(insights: list[ExtractedInsight], week: str) -> list[ExtractedInsight]:
+    return [insight for insight in insights if _insight_in_published_week(insight, week)]
+
+
+def summarize_week_filter(insights: list[ExtractedInsight], week: str) -> dict[str, int | str]:
+    selected = filter_insights_for_published_week(insights, week)
+    return {
+        "week": week,
+        "input_insights": len(insights),
+        "selected_insights": len(selected),
+        "missing_published_at": sum(1 for insight in insights if not _published_dates(insight)),
+        "excluded_different_week": len(insights) - len(selected) - sum(1 for insight in insights if not _published_dates(insight)),
+    }
 
 
 def build_source_references(insights: list[ExtractedInsight]) -> tuple[list[SourceReference], dict[str, list[str]]]:
@@ -217,6 +232,17 @@ def _source_reference_lines(references: list[SourceReference]) -> list[str]:
         if reference.url:
             lines.append(f"  {reference.url}")
     return lines
+
+
+def _insight_in_published_week(insight: ExtractedInsight, week: str) -> bool:
+    return any(is_in_week(published_at, week) for published_at in _published_dates(insight))
+
+
+def _published_dates(insight: ExtractedInsight):
+    dates = [reference.published_at for reference in insight.source_references if reference.published_at]
+    if insight.published_at:
+        dates.append(insight.published_at)
+    return dates
 
 
 def _format_source_reference(reference: SourceReference) -> str:

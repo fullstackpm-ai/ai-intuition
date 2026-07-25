@@ -5,7 +5,7 @@ from pathlib import Path
 from app.llm.client import LLMClient, MockLLMClient, parse_jsonish
 from app.llm.prompts import EXTRACTION_PROMPT
 from app.models import Evidence, ExtractedInsight, ExtractionMethod, NormalizedItem
-from app.store.files import read_json
+from app.store.files import read_json, read_markdown
 from app.time import now_utc
 
 
@@ -42,6 +42,22 @@ def import_insights_from_json(
         extraction_model=extraction_model,
         extraction_notes=extraction_notes or f"Imported from {path}",
     )
+
+
+def load_insight_artifacts(data_dir: Path) -> list[ExtractedInsight]:
+    normalized_metadata = _normalized_metadata_by_item(data_dir / "normalized")
+    insights = []
+    for section in ["extracted", "rejected"]:
+        for path in sorted((data_dir / section).glob("*.json")):
+            payload = read_json(path)
+            if not isinstance(payload, list):
+                raise ValueError(f"Extraction artifact must be a JSON list: {path}")
+            for raw in payload:
+                if not isinstance(raw, dict):
+                    raise ValueError(f"Extraction artifact entries must be JSON objects: {path}")
+                enriched = _with_normalized_metadata(raw, normalized_metadata)
+                insights.append(ExtractedInsight.model_validate(enriched))
+    return insights
 
 
 def insights_from_payload(
@@ -105,6 +121,56 @@ def insights_from_payload(
             )
         )
     return insights
+
+
+def _normalized_metadata_by_item(normalized_dir: Path) -> dict[str, dict[str, object]]:
+    metadata_by_item = {}
+    for path in sorted(normalized_dir.glob("*.md")):
+        metadata, _ = read_markdown(path)
+        item_id = str(metadata.get("id") or path.stem)
+        metadata_by_item[item_id] = {
+            "item_id": item_id,
+            "source_id": metadata.get("source_id"),
+            "source_name": metadata.get("source_name"),
+            "source_type": metadata.get("source_type"),
+            "source_title": metadata.get("title"),
+            "source_url": metadata.get("url"),
+            "raw_artifact_id": metadata.get("raw_artifact_id"),
+            "raw_path": metadata.get("raw_path"),
+            "normalized_path": _portable_path(path),
+            "published_at": metadata.get("published_at"),
+            "lane": metadata.get("lane"),
+        }
+    return metadata_by_item
+
+
+def _with_normalized_metadata(raw: dict[str, object], normalized_metadata: dict[str, dict[str, object]]) -> dict[str, object]:
+    enriched = dict(raw)
+    item_id = str(enriched.get("item_id") or "")
+    metadata = normalized_metadata.get(item_id, {})
+    for field in [
+        "source_name",
+        "source_type",
+        "raw_artifact_id",
+        "raw_path",
+        "normalized_path",
+        "published_at",
+    ]:
+        if not enriched.get(field) and metadata.get(field):
+            enriched[field] = metadata[field]
+    for field in ["source_id", "source_title", "source_url", "lane"]:
+        if not enriched.get(field) and metadata.get(field):
+            enriched[field] = metadata[field]
+    if not enriched.get("created_at"):
+        enriched["created_at"] = now_utc()
+    return enriched
+
+
+def _portable_path(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(Path.cwd().resolve()))
+    except ValueError:
+        return str(path)
 
 
 def build_extraction_packet(item: NormalizedItem) -> str:
