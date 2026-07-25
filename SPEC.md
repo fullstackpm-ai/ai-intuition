@@ -1,34 +1,37 @@
-# SPEC.md — AI Operating Intelligence / Source-to-Insight Compiler
+# SPEC.md — AI Intuition Compiler / Source-to-Insight System
 
 ## 0. One-line purpose
 
 Build a repo-first intelligence system that ingests frontier AI research, product launches, selected podcasts, and strategy commentary, then produces a weekly memo answering:
 
-> What should I now believe differently about commercial agent design, and what should Ender do because of it?
+> What should I now believe differently about LLMs, agents, model limitations, commercial AI product architecture, and AI market structure?
 
-This is not a summarizer. It is a source-to-insight compiler.
+This is not a summarizer. It is a source-to-insight compiler for compounding personal intuition.
 
 ---
 
 ## 1. Product thesis
 
-Most AI content is not useful because it stops at summary.
+Most AI content is low-value because it stops at summary.
 
-The useful unit is a durable product/design insight:
+The useful unit is a durable intuition artifact:
 
-- a new agent design law
+- a mental model
+- a reusable agent design law
 - a named failure mode
 - an eval pattern
-- a commercial architecture implication
-- a concrete experiment to run
+- a boundary condition
+- a counterexample to a naive belief
+- a toy example or learning experiment
+- a belief-ledger update
 
 The system should discard anything that cannot be converted into one of those artifacts.
 
 Example of the target insight shape:
 
-> Rules expressed only in prose are probabilistic. Business-critical rules should be enforced through tools, code, schemas, validators, permissions, and workflow state. Prompt instructions are attention architecture, not deterministic authority.
+> Rules expressed only in prose are probabilistic. Business-critical constraints should be enforced through tools, code, schemas, validators, permissions, and workflow state. Prompt instructions are attention architecture, not deterministic authority.
 
-That is the quality bar.
+That is the quality bar: observed model/system behavior becomes a reusable law that sharpens intuition.
 
 ---
 
@@ -43,7 +46,8 @@ Do not build these in v1:
 - Autonomous web-browsing swarms.
 - Full support for every possible source.
 - Perfect podcast transcription.
-- Automated decisions that update beliefs without review.
+- Automated belief updates without human review.
+- Domain-specific implication tracking for any one company or product.
 
 The v1 product is a command-line/repo workflow that creates high-quality markdown artifacts.
 
@@ -63,25 +67,56 @@ All raw inputs, normalized texts, extracted insights, weekly briefs, and belief-
 
 The core data object is `ExtractedInsight`, not a paragraph summary.
 
-Each insight must include:
+Each accepted insight must include:
 
+- claim
 - mechanism
-- commercial design law
-- failure mode
-- Ender implication
-- experiment
+- intuition update
+- mental model or design law
+- boundary conditions
 - evidence
 - confidence
 - novelty
-- discard rationale if rejected
+- mental-model impact
 
-### 3.3 Fewer sharper insights
+If applicable, it may also include:
+
+- named failure mode
+- eval pattern
+- counterargument
+- strategy implication
+- learning experiment
+- intuition drill
+
+### 3.3 Mechanism beats headline
+
+A source saying "agents can now do X" is not enough.
+
+The extraction must identify the mechanism underneath the claim:
+
+- What changed in model behavior?
+- What changed in the harness around the model?
+- What changed in the user/model/tool/environment contract?
+- What failure mode became more or less important?
+- What prior should move?
+
+### 3.4 Intuition updates beat company implications
+
+The system should not ask, "What does this mean for one specific company?"
+
+It should ask:
+
+> What reusable distinction, law, failure mode, or market-structure model should I now carry around in my head?
+
+Company/product implications may emerge later, but they are not required for acceptance.
+
+### 3.5 Fewer sharper insights
 
 The system should prefer three high-signal belief updates over thirty summaries.
 
 The editor pass should delete aggressively.
 
-### 3.4 Source roles are different
+### 3.6 Source roles are different
 
 Each source class has a distinct interpretation lens:
 
@@ -89,30 +124,33 @@ Each source class has a distinct interpretation lens:
 - Eval/failure/security research: limits and failure modes.
 - Product launches: interface contracts and harness patterns.
 - Podcasts: frontier priors and operator assumptions.
-- Strategy commentary: value capture and defensibility.
-- Internal/domain material: Ender-specific workflow implications.
+- Strategy commentary: value capture, platforms, distribution, and market structure.
+- Manual/golden material: known examples of the desired extraction quality.
 
-### 3.5 Every output must be decision-linked
+### 3.7 Every output must be belief-linked
 
 No item enters the weekly brief unless it can affect at least one of:
 
-- agent architecture
-- permissioning / tool design
-- eval design
-- roadmap prioritization
-- product UX
-- GTM / value capture
-- Ender defensibility
+- how LLMs behave
+- what agents can and cannot reliably do
+- how context, memory, tools, state, and evals should be understood
+- what kinds of business rules models can interpret versus enforce
+- what failure modes matter in commercial AI systems
+- what product/harness patterns are emerging
+- what market-structure or value-capture model should update
+- what question, toy example, or experiment would build better intuition
 
 ---
 
 ## 4. Target user
 
-Primary user: founder/operator building AI-native commercial software for property-management workflows.
+Primary user: founder/operator building strong AI intuition for commercial product and infrastructure judgment.
 
 The user wants insight density, not completeness.
 
-The user wants the system to challenge priors, surface failure modes, and compress frontier AI research into product architecture judgment.
+The user wants the system to challenge priors, surface failure modes, compress frontier AI research, and produce durable mental models.
+
+The system should optimize for becoming a weekly intuition-compounding machine, not an AI-news digest.
 
 ---
 
@@ -141,7 +179,7 @@ Required initial podcast sources:
 - Dwarkesh Podcast.
 - Lenny's Podcast.
 
-In v1, do not ingest every episode automatically into the final brief. Ingest all candidates, but only promote items with real belief updates.
+In v1, do not ingest every episode automatically into the final brief. Ingest candidates, but only promote items with real belief updates.
 
 ### 5.3 Strategy sources
 
@@ -150,20 +188,20 @@ Required:
 - Stratechery, if accessible through subscription/manual export/RSS.
 - Optional: selected investor/operator essays added manually through `sources.yaml`.
 
-Strategy sources should never be interpreted as technical truth. They should be interpreted for value-capture implications.
+Strategy sources should never be interpreted as technical truth. They should be interpreted for value-capture models, platform shifts, distribution power, bundling, commoditization, and business architecture.
 
 ### 5.4 Internal / golden sources
 
 Include a `/golden/` folder with known high-quality examples.
 
-The initial golden example should be the prompt-design principles note. It represents the desired transformation from observed model behavior into reusable commercial agent design laws.
+The initial golden example should be the prompt-design principles note. It represents the desired transformation from observed model behavior into reusable mental models, commercial agent design laws, named failure modes, and eval rules.
 
 ---
 
 ## 6. Repository structure
 
 ```text
-ai-operating-intelligence/
+ai-intuition-compiler/
   README.md
   AGENTS.md
   SPEC.md
@@ -231,11 +269,13 @@ ai-operating-intelligence/
     rejected/
     briefs/
     beliefs/
+      llm-mental-models.md
       agent-design-laws.md
       failure-modes.md
       eval-patterns.md
-      ender-implications.md
+      strategy-models.md
       belief-ledger.md
+      questions-to-investigate.md
     golden/
       prompt-design-principles.md
 
@@ -295,6 +335,7 @@ EMAIL_TO=
 
 # Optional authenticated sources
 STRATECHERY_COOKIE=
+STRATECHERY_PERSONAL_RSS_URL=
 ```
 
 ### 8.2 `sources.yaml`
@@ -427,7 +468,16 @@ class NormalizedItem(BaseModel):
     extraction_notes: str | None = None
 ```
 
-### 9.4 `ExtractedInsight`
+### 9.4 `Evidence`
+
+```python
+class Evidence(BaseModel):
+    quote: str
+    location: str | None = None # URL, timestamp, section, etc.
+    note: str | None = None
+```
+
+### 9.5 `ExtractedInsight`
 
 ```python
 class ExtractedInsight(BaseModel):
@@ -442,29 +492,27 @@ class ExtractedInsight(BaseModel):
 
     claim: str
     mechanism: str
-    commercial_design_law: str | None = None
+    intuition_update: str
+
+    mental_model: str | None = None
+    design_law: str | None = None
     failure_mode: str | None = None
     eval_pattern: str | None = None
-    ender_implication: str | None = None
-    experiment_30_day: str | None = None
+    boundary_conditions: str | None = None
+    counterargument: str | None = None
+    strategy_implication: str | None = None
+    learning_experiment: str | None = None
+    intuition_drill: str | None = None
+    open_question: str | None = None
 
-    evidence: list["Evidence"]
+    evidence: list[Evidence]
     confidence: Literal["low", "medium", "high"]
     novelty: Literal["low", "medium", "high"]
-    decision_impact: Literal["low", "medium", "high"]
+    mental_model_impact: Literal["low", "medium", "high"]
 
     editor_notes: str | None = None
     discard_reason: str | None = None
     created_at: datetime
-```
-
-### 9.5 `Evidence`
-
-```python
-class Evidence(BaseModel):
-    quote: str
-    location: str | None = None # URL, timestamp, section, etc.
-    note: str | None = None
 ```
 
 ### 9.6 `WeeklyBrief`
@@ -475,10 +523,13 @@ class WeeklyBrief(BaseModel):
     generated_at: datetime
     one_line_thesis: str
     belief_updates: list[str]
+    new_or_updated_mental_models: list[str]
     new_or_updated_design_laws: list[str]
     new_failure_modes: list[str]
-    ender_implications: dict[str, list[str]]
-    experiments: list[str]
+    new_eval_patterns: list[str]
+    strategy_updates: list[str]
+    learning_experiments: list[str]
+    intuition_drills: list[str]
     ignored_noise: list[str]
     source_rollup: list[str]
     human_review_flags: list[str]
@@ -518,12 +569,12 @@ For podcasts, use episode URL or title + published date.
 
 Implement with Typer.
 
-### 11.1 `aios ingest`
+### 11.1 `aic ingest`
 
 ```bash
-aios ingest --since 7d
-aios ingest --source openai --since 30d
-aios ingest --manual data/raw/manual/some-file.md
+aic ingest --since 7d
+aic ingest --source openai --since 30d
+aic ingest --manual data/raw/manual/some-file.md
 ```
 
 Behavior:
@@ -534,11 +585,11 @@ Behavior:
 - Updates SQLite.
 - Does not call the LLM.
 
-### 11.2 `aios normalize`
+### 11.2 `aic normalize`
 
 ```bash
-aios normalize --since 7d
-aios normalize --item <raw_artifact_id>
+aic normalize --since 7d
+aic normalize --item <raw_artifact_id>
 ```
 
 Behavior:
@@ -547,11 +598,11 @@ Behavior:
 - Saves to `data/normalized/{item_id}.md`.
 - Preserves metadata frontmatter.
 
-### 11.3 `aios extract`
+### 11.3 `aic extract`
 
 ```bash
-aios extract --since 7d
-aios extract --item <normalized_item_id>
+aic extract --since 7d
+aic extract --item <normalized_item_id>
 ```
 
 Behavior:
@@ -560,10 +611,10 @@ Behavior:
 - Writes JSON to `data/extracted/{item_id}.json`.
 - Writes rejected insights to `data/rejected/{item_id}.json`.
 
-### 11.4 `aios edit`
+### 11.4 `aic edit`
 
 ```bash
-aios edit --since 7d
+aic edit --since 7d
 ```
 
 Behavior:
@@ -572,40 +623,42 @@ Behavior:
 - Deletes/downgrades generic insights.
 - Marks accepted/rejected/needs_human_review.
 
-### 11.5 `aios brief`
+### 11.5 `aic brief`
 
 ```bash
-aios brief --week 2026-W22
-aios brief --current-week
+aic brief --week 2026-W22
+aic brief --current-week
 ```
 
 Behavior:
 
 - Reads accepted insights for the week.
-- Clusters/dedupes by mechanism/design law.
+- Clusters/dedupes by mechanism/design law/mental model.
 - Generates `data/briefs/2026-W22.md`.
 - Proposes updates to belief files.
 
-### 11.6 `aios belief-update`
+### 11.6 `aic belief-update`
 
 ```bash
-aios belief-update --week 2026-W22
+aic belief-update --week 2026-W22
 ```
 
 Behavior:
 
 - Updates:
+  - `data/beliefs/llm-mental-models.md`
   - `data/beliefs/agent-design-laws.md`
   - `data/beliefs/failure-modes.md`
   - `data/beliefs/eval-patterns.md`
-  - `data/beliefs/ender-implications.md`
+  - `data/beliefs/strategy-models.md`
   - `data/beliefs/belief-ledger.md`
-- Should mark changes clearly under a weekly heading.
+  - `data/beliefs/questions-to-investigate.md`
+- Marks changes clearly under a weekly heading.
 
-### 11.7 `aios send`
+### 11.7 `aic send`
 
 ```bash
-aios send --week 2026-W22
+aic send --week 2026-W22
 ```
 
 Behavior:
@@ -613,10 +666,10 @@ Behavior:
 - Sends the markdown brief to configured email recipient.
 - Phase 2 only.
 
-### 11.8 `aios run-weekly`
+### 11.8 `aic run-weekly`
 
 ```bash
-aios run-weekly
+aic run-weekly
 ```
 
 Behavior:
@@ -624,12 +677,12 @@ Behavior:
 Runs:
 
 ```bash
-aios ingest --since 7d
-aios normalize --since 7d
-aios extract --since 7d
-aios edit --since 7d
-aios brief --current-week
-aios belief-update --current-week
+aic ingest --since 7d
+aic normalize --since 7d
+aic extract --since 7d
+aic edit --since 7d
+aic brief --current-week
+aic belief-update --current-week
 ```
 
 Do not send email unless `--send` is provided.
@@ -645,7 +698,7 @@ Implement prompt strings in `app/llm/prompts.py`.
 ```text
 You are not summarizing this source.
 
-Your job is to extract only insights that would change how a senior AI product/operator designs commercial agents.
+Your job is to extract only insights that would change how a senior AI product/operator understands LLMs, agents, model limitations, commercial AI architecture, evals, or AI market structure.
 
 Source lane:
 {lane}
@@ -660,29 +713,32 @@ Extract candidate insights only if they satisfy at least one condition:
 - reveal a mechanism of model behavior or agent behavior
 - expose a failure mode relevant to commercial agent design
 - suggest a reusable agent design law
-- imply a concrete product architecture change
 - imply a concrete eval pattern
-- affect value capture or defensibility for vertical AI software
-- suggest a 30-day experiment for Ender
+- sharpen intuition about business-rule understanding, tool use, context, memory, planning, or autonomy
+- affect a prior about AI capability trajectories, product adoption, value capture, or market structure
+- reveal a boundary condition where a common belief breaks
+- suggest a toy example, learning experiment, or test question that would build intuition
 
 For each candidate insight:
 1. State the claim.
 2. State the mechanism, not the headline.
-3. Convert it into a reusable commercial agent design law if possible.
-4. Name the failure mode it exposes or reduces if possible.
-5. Explain the implication for Ender workflows.
-6. Propose a 30-day experiment.
-7. Include short evidence quotes or timestamp/location.
-8. Assign confidence, novelty, and decision impact.
+3. State the intuition update: what should the reader now believe differently?
+4. Convert it into a reusable mental model or commercial agent design law if possible.
+5. Name the failure mode it exposes or reduces if possible.
+6. Name the eval pattern it suggests if possible.
+7. State boundary conditions and counterarguments if relevant.
+8. Propose a learning experiment, toy example, or intuition drill.
+9. Include short evidence quotes or timestamp/location.
+10. Assign confidence, novelty, and mental_model_impact.
 
 Reject anything that is merely:
 - news
 - funding
 - generic AI hype
 - generic product advice
-- benchmark movement without deployment implications
+- benchmark movement without deployment implication
 - duplicate of an existing known law
-- interesting but not actionable
+- interesting but not intuition-changing
 
 Return strict JSON matching the ExtractedInsight list schema.
 Prefer fewer, sharper insights.
@@ -691,12 +747,15 @@ Prefer fewer, sharper insights.
 ### 12.2 Editorial prompt
 
 ```text
-You are the adversarial editor for an AI operating intelligence system.
+You are the adversarial editor for an AI intuition compiler.
 
 Your job is to remove generic, unsupported, duplicative, or non-actionable insights.
 
 Input candidate insights:
 {candidate_json}
+
+Known mental models:
+{known_mental_models}
 
 Known design laws:
 {known_design_laws}
@@ -704,11 +763,16 @@ Known design laws:
 Known failure modes:
 {known_failure_modes}
 
+Known strategy models:
+{known_strategy_models}
+
 For each candidate:
-- Accept only if it changes a deployment assumption or creates a useful reusable law.
+- Accept only if it changes a belief, sharpens a mental model, names a useful failure mode, or creates a reusable law.
 - Reject if it is a summary dressed up as insight.
-- Reject if the Ender implication is vague.
-- Reject if the experiment is not testable in 30 days.
+- Reject if the intuition update is vague.
+- Reject if there is no mechanism.
+- Reject if there is no evidence.
+- Reject if the learning experiment or intuition drill is not concrete enough to teach something.
 - Mark needs_human_review if the claim is important but evidence is weak.
 
 Prefer a maximum of 3 accepted insights per source.
@@ -719,19 +783,19 @@ Return strict JSON.
 ### 12.3 Weekly synthesis prompt
 
 ```text
-You are writing the weekly AI Operating Intelligence brief for a founder building commercial AI agents.
+You are writing the weekly AI Intuition Brief for a founder/operator building deep judgment about LLMs, agents, and AI product architecture.
 
 Do not summarize the week.
 
 Use accepted insights to answer:
-What should I now believe differently about commercial agent design?
+What should I now believe differently about AI systems?
 
 Inputs:
 {accepted_insights_json}
 
 Write a punchy markdown memo with this structure:
 
-# AI Operating Intelligence — {week}
+# AI Intuition Brief — {week}
 
 ## One-line thesis
 One sentence.
@@ -739,23 +803,26 @@ One sentence.
 ## 3 belief updates
 Only include belief updates that changed a prior.
 
+## New or updated mental models
+Each mental model should be reusable and concrete.
+
 ## New or updated agent design laws
-Each law should be reusable and concrete.
+Each law should compress a durable product/architecture lesson.
 
 ## New failure modes to track
 Name the failure mode and explain why it matters.
 
-## Ender implications
-Group by:
-- Leasing
-- Maintenance
-- Accounting
-- Collections
-- Support
-- Platform / architecture
+## New eval patterns
+Translate reliability lessons into tests.
 
-## Experiments to run in 30 days
-Each experiment must be small, falsifiable, and tied to a failure mode or design law.
+## Strategy / value-capture updates
+Only include market-structure updates that change how to think about AI businesses.
+
+## Where naive intuition breaks
+Call out assumptions that seem plausible but are wrong or incomplete.
+
+## Learning experiments / intuition drills
+Small examples, toy tests, or questions that would help internalize the lesson.
 
 ## Ignored noise
 List categories or specific items ignored and why.
@@ -774,7 +841,7 @@ Style:
 ### 12.4 Belief-ledger update prompt
 
 ```text
-You maintain a living belief ledger for commercial agent design.
+You maintain a living belief ledger for AI intuition.
 
 Current belief files:
 {belief_files}
@@ -782,7 +849,7 @@ Current belief files:
 Weekly accepted insights:
 {accepted_insights_json}
 
-Update the belief ledger only when there is a durable law, failure mode, eval pattern, or Ender implication.
+Update the belief ledger only when there is a durable mental model, design law, failure mode, eval pattern, strategy model, or open question.
 
 For each update:
 - state whether it is NEW, REFINED, or CHALLENGED
@@ -790,6 +857,7 @@ For each update:
 - include week
 - write in durable language
 - do not add transient news
+- include boundary conditions where relevant
 
 Return markdown patches grouped by target file.
 ```
@@ -808,7 +876,7 @@ accepted_insights: 7
 human_review_flags: 2
 ---
 
-# AI Operating Intelligence — 2026-W22
+# AI Intuition Brief — 2026-W22
 
 ## One-line thesis
 
@@ -820,41 +888,53 @@ Agent value is shifting from model capability to controlled execution environmen
 2. Tool-using agents should be permissioned by available actions, not instructed through prohibitions.
 3. User trust appears to form around inspectable autonomy: users want visibility into actions, state, and rollback more than raw reasoning traces.
 
+## New or updated mental models
+
+### Prompting is attention architecture
+
+A prompt is not a policy engine. It is a way of shaping salience under finite attention. Rules compete with surrounding text, default model behavior, and the current user turn.
+
+### Context size is not context control
+
+Long context gives the model access to more material. It does not guarantee the right condition will govern the next action.
+
 ## New or updated agent design laws
 
-### Context salience beats context size
-Long context enables retrieval; it does not guarantee that the right condition controls the next action. Promote active constraints and retrieve passive reference material.
-
 ### Tool availability is permissioning
+
 Do not expose tools the model is not allowed to call. Dynamic tool lists are stronger than prompt-level “do not call” instructions.
+
+### Autonomy expands with reversibility
+
+Agents can move faster where actions are reversible, low-stakes, observable, and cheaply recoverable. Irreversible actions require structural gates.
 
 ## New failure modes to track
 
 ### Pre-commitment drift
+
 The model commits in language before it verifies whether the action is allowed, then follows the commitment into a rule violation.
 
-## Ender implications
+## New eval patterns
 
-### Leasing
-Tour links should be exposed as a tool only when deterministic unit state permits tour scheduling.
+### Replay actual failure payloads
 
-### Maintenance
-Maintenance triage can tolerate more autonomy because most actions are reversible and inspection-friendly.
+Synthetic prompts miss edge cases. Use captured examples that already exhibited the failure mode.
 
-### Accounting
-Fee waivers, ledger edits, deposits, credits, and write-offs need structural approval gates.
+## Strategy / value-capture updates
 
-### Collections
-Payment-plan suggestions can be drafted by the model, but execution should require deterministic eligibility checks and human approval.
+Horizontal agents become more powerful as they can operate arbitrary software, but vertical systems retain leverage when they own workflow state, permissions, audit trails, and execution context.
 
-### Platform / architecture
-Active constraints should be generated per turn from state, not manually buried in static prompt text.
+## Where naive intuition breaks
 
-## Experiments to run in 30 days
+Naive belief: “If the model has all the context, it can apply all the rules.”
 
-1. Replay 50 leasing conversations with full-context prompts versus state-promoted prompts; measure tour-link leakage.
-2. Replace prompt-level “do not waive fees” rule with tool-level permission gating; measure false action claims.
-3. Build a reversibility matrix for Ender workflows and assign allowed autonomy levels.
+Correction: access is not salience, and salience is not enforcement.
+
+## Learning experiments / intuition drills
+
+1. Take a business rule, place it at the top of a prompt, middle of a long prompt, and as a tool permission. Replay the same scenario 20 times and compare violation rates.
+2. Build a toy dynamic-tool-list example where the model cannot call the disallowed action because the tool is absent.
+3. Ask: what is the difference between a model understanding a rule and a system enforcing a rule?
 
 ## Ignored noise
 
@@ -864,14 +944,42 @@ Active constraints should be generated per turn from state, not manually buried 
 
 ## Human review flags
 
-- Check whether the latest model release materially changes long-context salience failures or only reduces them.
+- Check whether the latest long-context model materially reduces salience failures or merely makes them less frequent.
 ```
 
 ---
 
 ## 14. Belief files
 
-### 14.1 `data/beliefs/agent-design-laws.md`
+### 14.1 `data/beliefs/llm-mental-models.md`
+
+Initial seed:
+
+```markdown
+# LLM Mental Models
+
+## LLMs are probabilistic interpreters, not deterministic authorities
+
+LLMs can interpret ambiguous situations, synthesize language, and propose actions. They should not be the final authority for rules that require deterministic enforcement.
+
+## Prompting is attention architecture
+
+A prompt shapes what the model attends to. Placement, repetition, competition, and current-turn salience all affect behavior.
+
+## Context size is not context control
+
+Long context increases access to information. It does not guarantee that the right rule or fact controls the next token.
+
+## Model size buys robustness, not correctness
+
+Larger models can better compensate for weak prompt structure, but that can hide flawed architecture rather than fix it.
+
+## Multi-hop conditional reasoning compounds failure probability
+
+Tasks like “recall rule X, find state Y, apply condition Z, suppress default behavior” fail more often than single-hop directives or structural controls.
+```
+
+### 14.2 `data/beliefs/agent-design-laws.md`
 
 Initial seed:
 
@@ -899,7 +1007,7 @@ Agents can be given more autonomy where actions are reversible, low-stakes, obse
 Generic quality ratings are weak. Use replay evals tied to specific failures: leakage, false action claims, policy violation, wrong tool call, stale-state action, and unsafe commitment.
 ```
 
-### 14.2 `data/beliefs/failure-modes.md`
+### 14.3 `data/beliefs/failure-modes.md`
 
 Initial seed:
 
@@ -931,7 +1039,7 @@ Large irrelevant context dilutes attention and makes important rules less salien
 The model is allowed to decide something that should have been enforced by code, tool permissions, schemas, or validators.
 ```
 
-### 14.3 `data/beliefs/eval-patterns.md`
+### 14.4 `data/beliefs/eval-patterns.md`
 
 Initial seed:
 
@@ -955,32 +1063,48 @@ Change prompt, model, or tool design independently.
 If zero failures are observed in N trials, the approximate 95% upper bound is 3/N.
 ```
 
-### 14.4 `data/beliefs/ender-implications.md`
+### 14.5 `data/beliefs/strategy-models.md`
 
 Initial seed:
 
 ```markdown
-# Ender Implications
+# Strategy Models
 
-## Leasing
+## Frontier capability and commercial deployability are different curves
 
-Tour scheduling must be governed by deterministic unit state and tool availability, not prompt-only instructions.
+A capability can exist at the frontier before it becomes reliable, cheap, auditable, and trusted enough for commercial deployment.
 
-## Maintenance
+## Model capability can commoditize weak application layers
 
-Maintenance triage is a high-autonomy candidate because many actions are reversible and auditable.
+If an application is only a thin wrapper around model output, frontier models and horizontal agents can absorb it.
 
-## Accounting
+## Workflow state is a durable source of leverage
 
-Ledger mutation, fee waivers, deposits, credits, and write-offs require structural approval gates.
+Applications become more defensible when they own permissions, audit logs, data schemas, workflow state, user trust, and execution context.
 
-## Collections
+## Horizontal agents threaten interfaces before they threaten systems of authority
 
-Collections workflows should distinguish drafting from execution. The model can draft options; deterministic policy and human approval should govern execution.
+A horizontal agent can abstract UI work before it can safely replace systems that own state, compliance, approvals, and irreversible execution.
+```
 
-## Platform
+### 14.6 `data/beliefs/questions-to-investigate.md`
 
-Active constraints should be generated from state on each turn and placed at the top of the prompt or represented through available tools.
+Initial seed:
+
+```markdown
+# Questions to Investigate
+
+## What is the practical difference between understanding and enforcement?
+
+A model can understand a rule but still fail to enforce it reliably. Identify where that distinction matters most.
+
+## Which failures are reduced by better models versus eliminated by better architecture?
+
+Do not upgrade models to hide structural mistakes.
+
+## When does memory help agents versus create stale-state risk?
+
+Memory can improve personalization and continuity, but it can also cause agents to act from outdated assumptions.
 ```
 
 ---
@@ -991,14 +1115,14 @@ Each candidate insight should receive:
 
 ```text
 novelty: low | medium | high
-decision_impact: low | medium | high
+mental_model_impact: low | medium | high
 confidence: low | medium | high
 ```
 
 Accept if:
 
 ```text
-decision_impact = high
+mental_model_impact = high
 AND confidence != low
 AND novelty != low
 ```
@@ -1006,7 +1130,7 @@ AND novelty != low
 Or:
 
 ```text
-decision_impact = medium
+mental_model_impact = medium
 AND novelty = high
 AND confidence = medium/high
 ```
@@ -1014,17 +1138,18 @@ AND confidence = medium/high
 Reject if:
 
 - no mechanism
-- no Ender implication
-- no falsifiable experiment
+- no intuition update
 - no evidence
+- no boundary condition or counterexample when the claim is broad
+- no learning experiment, toy example, or intuition drill
 - generic summary
 - not materially different from known belief files
 
 Mark `needs_human_review` if:
 
-- decision impact is high but confidence is low
+- mental-model impact is high but confidence is low
 - source is commentary rather than primary evidence
-- claim could materially change roadmap or architecture
+- claim could materially change product, architecture, or investment judgment
 - source is paywalled/partial and evidence is incomplete
 
 ---
@@ -1037,7 +1162,7 @@ Read for mechanisms.
 
 Extraction question:
 
-> What does this change about what the model can infer versus what the system must enforce?
+> What does this change about what the model can infer, plan, remember, perceive, or use tools to accomplish versus what the surrounding system must enforce?
 
 ### 16.2 Eval/failure/security research
 
@@ -1045,7 +1170,7 @@ Read for limits.
 
 Extraction question:
 
-> What failure mode must our architecture make impossible, observable, or recoverable?
+> What failure mode must commercial agent architecture make impossible, observable, or recoverable?
 
 ### 16.3 Product launches
 
@@ -1053,7 +1178,7 @@ Read for interface contracts.
 
 Extraction question:
 
-> What contract is this product establishing between user, model, tool, and environment?
+> What contract is this product establishing between user, model, tool, memory, state, and environment?
 
 ### 16.4 Podcasts
 
@@ -1061,15 +1186,15 @@ Read for assumptions, not truth.
 
 Extraction question:
 
-> What assumption about the future would I adopt if this person is right, and what would Ender do differently?
+> What assumption about the future would I adopt if this person is right, and what would that make me watch, test, or believe differently?
 
 ### 16.5 Strategy commentary
 
-Read for value capture.
+Read for value-capture models.
 
 Extraction question:
 
-> Does this make Ender more likely to be the operating system, or more likely to become a database behind someone else's agent?
+> What changes about the balance of power among model labs, cloud providers, horizontal agents, incumbents, workflow software, and end users?
 
 ---
 
@@ -1119,7 +1244,7 @@ Support local audio files through OpenAI transcription if the audio file is avai
 Inputs:
 
 ```bash
-aios transcribe --file episode.mp3 --source dwarkesh
+aic transcribe --file episode.mp3 --source dwarkesh
 ```
 
 Output:
@@ -1142,10 +1267,13 @@ The system should extract something equivalent to:
 {
   "claim": "LLMs are unreliable final authorities for business rules when those rules are encoded only in prose.",
   "mechanism": "Finite attention, position salience, default pretrained behavior, and multi-hop conditional failure make prompt compliance probabilistic.",
-  "commercial_design_law": "Business-critical rules should be enforced through tools, code, schemas, validators, permissions, and workflow state.",
+  "intuition_update": "Treat the model as a probabilistic interpreter of rules, not the layer that owns enforcement.",
+  "mental_model": "Prompting is attention architecture; business rules need structural authority.",
+  "design_law": "Business-critical rules should be enforced through tools, code, schemas, validators, permissions, and workflow state.",
   "failure_mode": "Distant conditional / buried negative / pre-commitment drift / authority failure",
-  "ender_implication": "Tour links, fee waivers, ledger edits, and collections actions should be gated by deterministic state and dynamic tool availability.",
-  "experiment_30_day": "Replay captured conversations with prompt-only restrictions vs dynamic tool permissions and measure violation rates."
+  "boundary_conditions": "Prompt-only rules may be acceptable for low-stakes style/tone constraints, but not for safety, money, permissions, or irreversible action.",
+  "learning_experiment": "Replay captured conversations with prompt-only restrictions versus dynamic tool permissions and measure violation rates.",
+  "intuition_drill": "Explain the difference between a model understanding a rule and a system enforcing a rule."
 }
 ```
 
@@ -1155,8 +1283,9 @@ Implement tests that assert:
 
 - extraction returns valid JSON
 - accepted insights contain mechanism
-- accepted insights contain Ender implication
-- accepted insights contain experiment
+- accepted insights contain intuition_update
+- accepted insights contain evidence
+- accepted insights contain either mental_model, design_law, failure_mode, eval_pattern, or strategy_implication
 - generic summaries are rejected
 - prompt-design golden source produces at least one insight matching the expected design law
 
@@ -1171,17 +1300,17 @@ Create `AGENTS.md` at repo root:
 
 ## Project intent
 
-This repo is an AI operating intelligence system. It is not an AI-news summarizer.
+This repo is an AI intuition compiler. It is not an AI-news summarizer.
 
-The system ingests sources, extracts durable commercial agent-design insights, updates a belief ledger, and generates weekly briefs.
+The system ingests sources, extracts durable mental models and commercial agent-design insights, updates a belief ledger, and generates weekly briefs.
 
 The output should answer:
 
-What should I now believe differently about commercial agent design, and what should Ender do because of it?
+What should I now believe differently about LLMs, agents, model limitations, product architecture, and AI market structure?
 
 ## Core product rule
 
-Do not optimize for coverage. Optimize for surprise, decision impact, and reusable design laws.
+Do not optimize for coverage. Optimize for surprise, mental-model impact, and reusable laws.
 
 ## Development rules
 
@@ -1200,10 +1329,11 @@ Do not optimize for coverage. Optimize for surprise, decision impact, and reusab
 
 A useful insight has:
 - mechanism
-- design law or failure mode
-- Ender implication
-- falsifiable experiment
+- intuition update
+- mental model, design law, failure mode, eval pattern, or strategy model
 - evidence
+- boundary condition or counterexample when the claim is broad
+- learning experiment or intuition drill when useful
 
 Reject summaries that lack these.
 
@@ -1216,10 +1346,10 @@ Run tests:
 `uv run pytest`
 
 Run weekly pipeline:
-`uv run aios run-weekly`
+`uv run aic run-weekly`
 
 Generate current brief:
-`uv run aios brief --current-week`
+`uv run aic brief --current-week`
 ```
 
 ---
@@ -1238,7 +1368,7 @@ Build this first:
 8. Extraction prompt with mocked LLM option.
 9. Editorial pass with mocked LLM option.
 10. Weekly brief generation from extracted JSON.
-11. Belief files seeded with initial laws.
+11. Belief files seeded with initial mental models and laws.
 12. Golden eval for prompt-design note.
 
 Do not build podcast transcription until the manual path and one lab-source path work.
@@ -1276,7 +1406,7 @@ Add:
 Create `.github/workflows/weekly.yml` later:
 
 ```yaml
-name: weekly-ai-operating-intelligence
+name: weekly-ai-intuition-compiler
 
 on:
   schedule:
@@ -1290,15 +1420,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync
-      - run: uv run aios run-weekly
+      - run: uv run aic run-weekly
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - name: Commit weekly artifacts
         run: |
-          git config user.name "ai-operating-intelligence"
+          git config user.name "ai-intuition-compiler"
           git config user.email "bot@example.com"
           git add data/
-          git commit -m "weekly brief" || echo "No changes"
+          git commit -m "weekly intuition brief" || echo "No changes"
           git push
 ```
 
@@ -1310,14 +1440,14 @@ Do not enable email sending in GitHub Actions until secrets are configured.
 
 v1 is done when:
 
-- `uv run aios run-weekly` works locally.
+- `uv run aic run-weekly` works locally.
 - The system can ingest at least one manual source and one web source.
-- The prompt-design golden source produces a high-quality design-law extraction.
+- The prompt-design golden source produces a high-quality mental-model/design-law extraction.
 - The system generates a weekly markdown brief.
 - Belief files are updated or explicitly unchanged.
 - Generic summaries are rejected.
 - Tests pass.
-- The user can read the weekly brief in under five minutes and find at least one actionable product/architecture implication.
+- The user can read the weekly brief in under five minutes and say at least one belief, distinction, or mental model became sharper.
 
 ---
 
@@ -1325,7 +1455,7 @@ v1 is done when:
 
 The system is working if the user can say once per week:
 
-> This changed how I think about building commercial agents.
+> This changed how I think about LLMs, agents, or the AI business landscape.
 
 The system is failing if the output feels like:
 

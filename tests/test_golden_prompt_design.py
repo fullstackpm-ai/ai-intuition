@@ -10,6 +10,6 @@ def test_prompt_design_golden_produces_expected_design_law() -> None:
     assert accepted
     assert_quality_bar(accepted[0])
     assert "tools, code, schemas, validators, permissions, and workflow state" in (
-        accepted[0].commercial_design_law or ""
+        accepted[0].design_law or ""
     )
-    assert "Tour links" in (accepted[0].ender_implication or "")
+    assert "probabilistic interpreter" in accepted[0].intuition_update

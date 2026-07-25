@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from pathlib import Path
 
 from app.models import ExtractedInsight, WeeklyBrief
@@ -8,33 +7,22 @@ from app.store.files import write_markdown
 from app.time import now_utc
 
 
-ENDER_AREAS = ["Leasing", "Maintenance", "Accounting", "Collections", "Support", "Platform / architecture"]
-
-
 def build_weekly_brief(week: str, insights: list[ExtractedInsight], output_dir: Path) -> tuple[WeeklyBrief, Path]:
     accepted = [insight for insight in insights if insight.status == "accepted"]
     review = [insight for insight in insights if insight.status == "needs_human_review"]
-    thesis = "Commercial agent reliability comes from structural constraints, not prose-only instructions."
-    implications: dict[str, list[str]] = defaultdict(list)
-    for insight in accepted:
-        implication = insight.ender_implication or ""
-        implications["Platform / architecture"].append(implication)
-        if "tour" in implication.lower():
-            implications["Leasing"].append(implication)
-        if any(term in implication.lower() for term in ["fee", "ledger", "deposit", "credit", "write-off"]):
-            implications["Accounting"].append(implication)
-        if "collections" in implication.lower():
-            implications["Collections"].append(implication)
-    normalized_implications = {area: implications.get(area, []) for area in ENDER_AREAS}
+    thesis = "Durable AI intuition comes from mechanisms, boundaries, and structural controls rather than summaries."
     brief = WeeklyBrief(
         week=week,
         generated_at=now_utc(),
         one_line_thesis=thesis if accepted else "No accepted belief updates this week.",
-        belief_updates=[insight.claim for insight in accepted[:3]],
-        new_or_updated_design_laws=[insight.commercial_design_law for insight in accepted if insight.commercial_design_law],
+        belief_updates=[insight.intuition_update or insight.claim for insight in accepted[:3]],
+        new_or_updated_mental_models=[insight.mental_model for insight in accepted if insight.mental_model],
+        new_or_updated_design_laws=[insight.design_law for insight in accepted if insight.design_law],
         new_failure_modes=[insight.failure_mode for insight in accepted if insight.failure_mode],
-        ender_implications=normalized_implications,
-        experiments=[insight.experiment_30_day for insight in accepted if insight.experiment_30_day],
+        new_eval_patterns=[insight.eval_pattern for insight in accepted if insight.eval_pattern],
+        strategy_updates=[insight.strategy_implication for insight in accepted if insight.strategy_implication],
+        learning_experiments=[insight.learning_experiment for insight in accepted if insight.learning_experiment],
+        intuition_drills=[insight.intuition_drill for insight in accepted if insight.intuition_drill],
         ignored_noise=[insight.discard_reason for insight in insights if insight.status == "rejected" and insight.discard_reason],
         source_rollup=[f"{insight.source_id}: {insight.source_title}" for insight in accepted],
         human_review_flags=[insight.claim for insight in review],
@@ -56,7 +44,7 @@ def build_weekly_brief(week: str, insights: list[ExtractedInsight], output_dir: 
 
 def render_weekly_brief_markdown(brief: WeeklyBrief) -> str:
     lines = [
-        f"# AI Operating Intelligence - {brief.week}",
+        f"# AI Intuition Brief - {brief.week}",
         "",
         "## One-line thesis",
         "",
@@ -66,17 +54,18 @@ def render_weekly_brief_markdown(brief: WeeklyBrief) -> str:
         "",
     ]
     lines.extend(_numbered(brief.belief_updates))
+    lines.extend(["", "## New or updated mental models", ""])
+    lines.extend(_bullets(brief.new_or_updated_mental_models))
     lines.extend(["", "## New or updated agent design laws", ""])
     lines.extend(_bullets(brief.new_or_updated_design_laws))
     lines.extend(["", "## New failure modes to track", ""])
     lines.extend(_bullets(brief.new_failure_modes))
-    lines.extend(["", "## Ender implications", ""])
-    for area, values in brief.ender_implications.items():
-        lines.extend([f"### {area}", ""])
-        lines.extend(_bullets(values or ["No accepted implication this week."]))
-        lines.append("")
-    lines.extend(["## Experiments to run in 30 days", ""])
-    lines.extend(_numbered(brief.experiments))
+    lines.extend(["", "## New eval patterns", ""])
+    lines.extend(_bullets(brief.new_eval_patterns))
+    lines.extend(["", "## Strategy / value-capture updates", ""])
+    lines.extend(_bullets(brief.strategy_updates))
+    lines.extend(["", "## Learning experiments / intuition drills", ""])
+    lines.extend(_numbered([*brief.learning_experiments, *brief.intuition_drills]))
     lines.extend(["", "## Ignored noise", ""])
     lines.extend(_bullets(brief.ignored_noise or ["No rejected noise recorded."]))
     lines.extend(["", "## Human review flags", ""])
@@ -85,7 +74,7 @@ def render_weekly_brief_markdown(brief: WeeklyBrief) -> str:
 
 
 def _bullets(values: list[str]) -> list[str]:
-    return [f"- {value}" for value in values]
+    return [f"- {value}" for value in values] or ["- None."]
 
 
 def _numbered(values: list[str]) -> list[str]:

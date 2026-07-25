@@ -22,3 +22,12 @@ Generic quality ratings are weak. Use replay evals tied to specific failures: le
 
 ## 2026-W21
 - REFINED: Business-critical rules should be enforced through tools, code, schemas, validators, permissions, and workflow state.
+- REFINED: Assign every agent safety requirement to a structural layer; do not leave high-stakes requirements as model intent alone.
+- REFINED: Use plan approval, risk-tiered permissions, and interruptibility for long agent workflows instead of prompting for every low-level action.
+- REFINED: Treat every external content source as untrusted input and every tool as a capability boundary that needs least privilege, monitoring, and recoverability.
+
+## 2026-W30
+- REFINED: Use LLM-assisted rebuilds of canonical systems as training data for product intuition; implementation exposes constraints that reading papers hides.
+- REFINED: For tasks with clear state transitions and outcome checks, give agents explicit search or replay machinery instead of relying only on one-shot model judgment.
+- REFINED: When designing AI products at scale, reason about the workload shape and precision needs early; architecture choices can create hardware-aligned or hardware-hostile demand.
+- REFINED: Agent and model-serving systems should track where precision matters rather than assuming uniform precision is either safe or optimal.

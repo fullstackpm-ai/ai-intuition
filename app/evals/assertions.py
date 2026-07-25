@@ -5,7 +5,6 @@ from app.models import ExtractedInsight
 
 def assert_quality_bar(insight: ExtractedInsight) -> None:
     assert insight.mechanism
-    assert insight.ender_implication
-    assert insight.experiment_30_day
+    assert insight.intuition_update
     assert insight.evidence
-    assert insight.commercial_design_law or insight.failure_mode
+    assert insight.mental_model or insight.design_law or insight.failure_mode or insight.eval_pattern or insight.strategy_implication

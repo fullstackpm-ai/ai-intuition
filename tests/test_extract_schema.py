@@ -17,6 +17,9 @@ def test_extract_returns_valid_json_models_for_golden_note() -> None:
     insights = extract_insights(item)
     assert insights
     assert insights[0].mechanism
+    assert insights[0].intuition_update
+    assert insights[0].evidence
+    assert insights[0].mental_model or insights[0].design_law or insights[0].failure_mode or insights[0].eval_pattern or insights[0].strategy_implication
 
 
 def test_generic_summaries_are_rejected() -> None:

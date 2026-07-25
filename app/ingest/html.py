@@ -16,7 +16,14 @@ def fetch_html(url: str) -> str:
     return response.text
 
 
-def ingest_html_url(source: Source, url: str, raw_root: Path, title: str | None = None, published_at: datetime | None = None) -> RawArtifact:
+def ingest_html_url(
+    source: Source,
+    url: str,
+    raw_root: Path,
+    title: str | None = None,
+    published_at: datetime | None = None,
+    metadata: dict[str, object] | None = None,
+) -> RawArtifact:
     html = fetch_html(url)
     inferred_title = title or url.rstrip("/").split("/")[-1].replace("-", " ").title() or source.name
     digest = content_hash(html)
@@ -36,5 +43,5 @@ def ingest_html_url(source: Source, url: str, raw_root: Path, title: str | None 
         discovered_at=now_utc(),
         raw_path=str(destination),
         content_hash=digest,
-        metadata={},
+        metadata=metadata or {},
     )

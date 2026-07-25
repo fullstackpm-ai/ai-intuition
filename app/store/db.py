@@ -97,9 +97,25 @@ class StateStore:
         with self.conn:
             cursor = self.conn.execute(
                 """
-                INSERT OR IGNORE INTO raw_artifacts
+                INSERT INTO raw_artifacts
                   (id, source_id, title, url, published_at, discovered_at, raw_path, content_hash, payload_json)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(content_hash) DO UPDATE SET
+                  id=excluded.id,
+                  source_id=excluded.source_id,
+                  title=excluded.title,
+                  url=excluded.url,
+                  published_at=excluded.published_at,
+                  discovered_at=excluded.discovered_at,
+                  raw_path=excluded.raw_path,
+                  payload_json=excluded.payload_json
+                WHERE raw_artifacts.id IS NOT excluded.id
+                  OR raw_artifacts.source_id IS NOT excluded.source_id
+                  OR raw_artifacts.title IS NOT excluded.title
+                  OR raw_artifacts.url IS NOT excluded.url
+                  OR raw_artifacts.published_at IS NOT excluded.published_at
+                  OR raw_artifacts.raw_path IS NOT excluded.raw_path
+                  OR raw_artifacts.payload_json IS NOT excluded.payload_json
                 """,
                 (
                     artifact.id,
@@ -181,7 +197,14 @@ class StateStore:
             sql += " WHERE status = ?"
             params = (status,)
         rows = self.conn.execute(sql, params).fetchall()
-        return [ExtractedInsight.model_validate_json(row["payload_json"]) for row in rows]
+        deduped: dict[tuple[str, str, str], ExtractedInsight] = {}
+        for row in rows:
+            insight = ExtractedInsight.model_validate_json(row["payload_json"])
+            key = (insight.item_id, insight.claim, insight.mechanism)
+            existing = deduped.get(key)
+            if existing is None or insight.created_at > existing.created_at:
+                deduped[key] = insight
+        return list(deduped.values())
 
     def log_run(self, command: str, metadata: dict[str, object]) -> None:
         from app.time import now_utc

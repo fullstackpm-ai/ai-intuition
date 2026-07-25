@@ -1,2 +1,1 @@
-"""AI operating intelligence package."""
-
+"""AI intuition compiler package."""

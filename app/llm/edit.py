@@ -9,30 +9,29 @@ def edit_insights(insights: list[ExtractedInsight]) -> list[ExtractedInsight]:
     for insight in insights:
         has_quality = bool(
             insight.mechanism
-            and insight.ender_implication
-            and insight.experiment_30_day
+            and insight.intuition_update
             and insight.evidence
-            and (insight.commercial_design_law or insight.failure_mode)
+            and (insight.mental_model or insight.design_law or insight.failure_mode or insight.eval_pattern or insight.strategy_implication)
         )
         high_accept = (
-            insight.decision_impact == "high"
+            insight.mental_model_impact == "high"
             and insight.confidence != "low"
             and insight.novelty != "low"
         )
         medium_accept = (
-            insight.decision_impact == "medium"
+            insight.mental_model_impact == "medium"
             and insight.novelty == "high"
             and insight.confidence in {"medium", "high"}
         )
         if insight.status == "rejected" or not has_quality:
             insight.status = "rejected"
-            insight.discard_reason = insight.discard_reason or "Missing mechanism, Ender implication, falsifiable experiment, evidence, or reusable law."
+            insight.discard_reason = insight.discard_reason or "Missing mechanism, intuition update, evidence, or reusable mental model/law/failure/eval/strategy model."
             insight.editor_notes = "Rejected by mocked editor quality bar."
         elif accepted_count < 3 and (high_accept or medium_accept):
             insight.status = "accepted"
             insight.editor_notes = "Accepted by mocked editor scoring rules."
             accepted_count += 1
-        elif insight.decision_impact == "high" and insight.confidence == "low":
+        elif insight.mental_model_impact == "high" and insight.confidence == "low":
             insight.status = "needs_human_review"
             insight.editor_notes = "High impact but weak confidence."
         else:

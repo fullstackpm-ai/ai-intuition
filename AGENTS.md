@@ -2,17 +2,17 @@
 
 ## Project intent
 
-This repo is an AI operating intelligence system. It is not an AI-news summarizer.
+This repo is an AI intuition compiler. It is not an AI-news summarizer.
 
-The system ingests sources, extracts durable commercial agent-design insights, updates a belief ledger, and generates weekly briefs.
+The system ingests sources, extracts durable mental models and commercial agent-design insights, updates a belief ledger, and generates weekly briefs.
 
 The output should answer:
 
-What should I now believe differently about commercial agent design, and what should Ender do because of it?
+What should I now believe differently about LLMs, agents, model limitations, product architecture, and AI market structure?
 
 ## Core product rule
 
-Do not optimize for coverage. Optimize for surprise, decision impact, and reusable design laws.
+Do not optimize for coverage. Optimize for surprise, mental-model impact, and reusable laws.
 
 ## Development rules
 
@@ -27,14 +27,28 @@ Do not optimize for coverage. Optimize for surprise, decision impact, and reusab
 - Add tests for every pipeline stage.
 - Make commands idempotent.
 
+## Documentation rules
+
+- `AGENTS.md` is the concise agent-facing source of current operating rules.
+- Use `docs/living/` for current explanations, runbooks, north-star direction, and shared processes.
+- Use `docs/point-in-time/` for accepted specs, decisions, and plans that should preserve historical context.
+- Use ProductSpec files under `docs/product-specs/` for consequential repo changes that need explicit intent, scope, acceptance criteria, and evidence.
+- When the user says "add an issue", "create an issue", or asks to track work in GitHub, create a new GitHub issue in ProductSpec format. Use the ProductSpec issue structure even if a local `.product-spec.md` file is not yet warranted, and link/create the local ProductSpec file when the work is consequential enough to execute.
+- Before planning or coding against a `.product-spec.md`, read it, cite its `spec_revision`, map work to `AC-` IDs, and respect `scope.out` and `scope.cut`.
+- If implementation pressure conflicts with a Product Spec, propose a spec revision, implementation change, Decision Trace, or reopened work; do not silently change intent.
+- Treat root `SPEC.md` as point-in-time product context unless a living doc explicitly supersedes it.
+- Do not treat generated `data/` artifacts as documentation; they are pipeline evidence and outputs.
+- Update living docs alongside code when behavior, commands, source policy, or artifact semantics change.
+
 ## Quality bar
 
 A useful insight has:
 - mechanism
-- design law or failure mode
-- Ender implication
-- falsifiable experiment
+- intuition update
+- mental model, design law, failure mode, eval pattern, or strategy model
 - evidence
+- boundary condition or counterexample when the claim is broad
+- learning experiment or intuition drill when useful
 
 Reject summaries that lack these.
 
@@ -47,7 +61,7 @@ Run tests:
 `uv run pytest`
 
 Run weekly pipeline:
-`uv run aios run-weekly`
+`uv run aic run-weekly`
 
 Generate current brief:
-`uv run aios brief --current-week`
+`uv run aic brief --current-week`

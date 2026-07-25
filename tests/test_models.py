@@ -22,10 +22,11 @@ def test_accepted_insight_requires_quality_bar() -> None:
             status="accepted",
             claim="AI is moving fast.",
             mechanism="",
+            intuition_update="",
             evidence=[],
             confidence="low",
             novelty="low",
-            decision_impact="low",
+            mental_model_impact="low",
             created_at=datetime.now(UTC),
         )
 
@@ -40,13 +41,14 @@ def test_accepted_insight_valid() -> None:
         status="accepted",
         claim="Rules in prose are probabilistic.",
         mechanism="Attention and salience make prompt compliance probabilistic.",
-        commercial_design_law="Business-critical rules should be structural.",
-        ender_implication="Gate high-stakes actions with deterministic state.",
-        experiment_30_day="Replay prompt-only versus tool-gated conversations.",
+        intuition_update="Treat the model as an interpreter, not the enforcement layer.",
+        mental_model="Prompting is attention architecture.",
+        design_law="Business-critical rules should be structural.",
+        learning_experiment="Replay prompt-only versus tool-gated conversations.",
         evidence=[Evidence(quote="Prompt instructions are attention architecture.")],
         confidence="high",
         novelty="high",
-        decision_impact="high",
+        mental_model_impact="high",
         created_at=datetime.now(UTC),
     )
     assert insight.status == "accepted"

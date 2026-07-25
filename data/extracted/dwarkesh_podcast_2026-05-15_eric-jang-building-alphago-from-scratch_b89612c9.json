@@ -1,0 +1,72 @@
+[
+  {
+    "id": "dwarkesh_podcast_2026-05-15_eric-jang-building-alphago-from-scratch_b89612c9_insight_0",
+    "item_id": "dwarkesh_podcast_2026-05-15_eric-jang-building-alphago-from-scratch_b89612c9",
+    "source_id": "dwarkesh_podcast",
+    "source_title": "Eric Jang \u2013 Building AlphaGo from scratch",
+    "source_url": "https://www.dwarkesh.com/p/eric-jang",
+    "lane": "frontier_priors",
+    "status": "accepted",
+    "claim": "LLM coding changes the economics of research replication before it changes the scientific frontier itself.",
+    "mechanism": "A project that previously required a specialized research team and large engineering budget can now be reproduced by an individual using LLM-assisted coding plus rented compute. The model compresses implementation labor, letting a single operator explore old frontier systems as live artifacts.",
+    "intuition_update": "Treat frontier research papers less as static literature and more as rebuildable laboratories; LLM coding makes replication a practical intuition-building tool.",
+    "mental_model": "Research replication is becoming an operator workflow, not only an institutional capability.",
+    "design_law": "Use LLM-assisted rebuilds of canonical systems as training data for product intuition; implementation exposes constraints that reading papers hides.",
+    "failure_mode": "Paper-only understanding: believing you understand an architecture because you read the result, while missing the operational constraints revealed by rebuilding it.",
+    "eval_pattern": "Select one canonical agent or ML system, rebuild the minimal version with LLM coding assistance, and log every place where implementation friction changes the conceptual takeaway.",
+    "boundary_conditions": "This applies best to well-specified historical systems with available papers, code, or clear evals; it applies less to proprietary frontier systems whose key tricks are not public.",
+    "counterargument": "Rebuilding old systems may not predict the next frontier, but it builds sharper priors about why architectures work and where costs actually appear.",
+    "strategy_implication": "Small teams can now use replication depth as a strategic learning advantage, reducing dependence on secondhand frontier commentary.",
+    "learning_experiment": "Rebuild a small AlphaGo-like loop or another canonical agent architecture twice: once from prose notes and once with LLM coding help. Compare how much conceptual understanding comes from each path.",
+    "intuition_drill": "For any AI paper, ask: what would I only learn by rebuilding the smallest runnable version?",
+    "open_question": "Which historic AI systems are now cheap enough to rebuild regularly as intuition drills?",
+    "evidence": [
+      {
+        "quote": "what took a whole team of research scientists at DeepMind and millions of dollars of research and compute can now be done for a few thousand dollars of rented compute",
+        "location": "00:00:00 - Basics of Go",
+        "note": "Eric Jang frames LLM coding as a dramatic change in replication economics."
+      }
+    ],
+    "confidence": "high",
+    "novelty": "high",
+    "mental_model_impact": "high",
+    "editor_notes": "Codex-assisted sample extraction.",
+    "discard_reason": null,
+    "created_at": "2026-07-24T00:00:00-07:00"
+  },
+  {
+    "id": "dwarkesh_podcast_2026-05-15_eric-jang-building-alphago-from-scratch_b89612c9_insight_1",
+    "item_id": "dwarkesh_podcast_2026-05-15_eric-jang-building-alphago-from-scratch_b89612c9",
+    "source_id": "dwarkesh_podcast",
+    "source_title": "Eric Jang \u2013 Building AlphaGo from scratch",
+    "source_url": "https://www.dwarkesh.com/p/eric-jang",
+    "lane": "frontier_priors",
+    "status": "accepted",
+    "claim": "AlphaGo is a reminder that powerful AI systems often combine learned intuition with explicit search rather than replacing search with pure prediction.",
+    "mechanism": "The neural network amortizes patterns from deep game-tree search, while search still structures decision-making over future states. Capability comes from the interaction between learned priors, simulation, and a crisp outcome signal.",
+    "intuition_update": "When evaluating agents, separate learned judgment from deliberation machinery. A stronger model is not the same thing as a better search/control loop.",
+    "mental_model": "Intelligence stack = learned prior + search process + environment model + outcome feedback.",
+    "design_law": "For tasks with clear state transitions and outcome checks, give agents explicit search or replay machinery instead of relying only on one-shot model judgment.",
+    "failure_mode": "Pure-prior overreach: asking a model to intuit an answer where the task actually needs systematic exploration of possible futures.",
+    "eval_pattern": "Compare a model-only agent with the same model wrapped in explicit candidate generation, simulation, and scoring on tasks with verifiable end states.",
+    "boundary_conditions": "This is strongest in domains with legible state, cheap simulation, and objective feedback; it is weaker for ambiguous social/product questions with no compact outcome function.",
+    "counterargument": "For many language tasks, building a faithful simulator is impossible or too expensive, so search can become performative rather than useful.",
+    "strategy_implication": "Commercial agents should identify which workflows have game-like structure and exploit search there, instead of applying uniform chatbot architecture everywhere.",
+    "learning_experiment": "Take a planning task with explicit constraints and compare direct-answer prompting against tree search over candidate plans with validation after each step.",
+    "intuition_drill": "For any agent workflow, ask whether the next action should come from intuition, search, or a verifier.",
+    "open_question": "Which commercial workflows have enough state clarity to benefit from AlphaGo-like search loops?",
+    "evidence": [
+      {
+        "quote": "the decisions are the result of a very, very deep search",
+        "location": "00:00:00 - Basics of Go",
+        "note": "Eric Jang contrasts intuitive robotics decisions with Go decisions shaped by deep search."
+      }
+    ],
+    "confidence": "medium",
+    "novelty": "medium",
+    "mental_model_impact": "high",
+    "editor_notes": "Codex-assisted sample extraction.",
+    "discard_reason": null,
+    "created_at": "2026-07-24T00:00:00-07:00"
+  }
+]

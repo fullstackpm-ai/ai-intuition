@@ -1,6 +1,6 @@
 [
   {
-    "id": "manual_2026-05-24_prompt-design-principles_13dd85ab_insight_0_e2f82caf",
+    "id": "manual_2026-05-24_prompt-design-principles_13dd85ab_insight_0",
     "item_id": "manual_2026-05-24_prompt-design-principles_13dd85ab",
     "source_id": "manual",
     "source_title": "Prompt Design Principles",
@@ -9,11 +9,17 @@
     "status": "accepted",
     "claim": "LLMs are unreliable final authorities for business rules when those rules are encoded only in prose.",
     "mechanism": "Finite attention, position salience, default pretrained behavior, and multi-hop conditional failure make prompt compliance probabilistic.",
-    "commercial_design_law": "Business-critical rules should be enforced through tools, code, schemas, validators, permissions, and workflow state.",
+    "intuition_update": "Treat the model as a probabilistic interpreter of rules, not the layer that owns enforcement.",
+    "mental_model": "Prompting is attention architecture; business rules need structural authority.",
+    "design_law": "Business-critical rules should be enforced through tools, code, schemas, validators, permissions, and workflow state.",
     "failure_mode": "Distant conditional / buried negative / pre-commitment drift / authority failure",
     "eval_pattern": "Replay captured conversations with prompt-only restrictions versus dynamic tool permissions and measure violation rates.",
-    "ender_implication": "Tour links, fee waivers, ledger edits, and collections actions should be gated by deterministic state and dynamic tool availability.",
-    "experiment_30_day": "Replay captured conversations with prompt-only restrictions vs dynamic tool permissions and measure violation rates.",
+    "boundary_conditions": "Prompt-only rules may be acceptable for low-stakes style or tone constraints, but not for safety, money, permissions, or irreversible action.",
+    "counterargument": null,
+    "strategy_implication": null,
+    "learning_experiment": "Replay captured conversations with prompt-only restrictions versus dynamic tool permissions and measure violation rates.",
+    "intuition_drill": "Explain the difference between a model understanding a rule and a system enforcing a rule.",
+    "open_question": null,
     "evidence": [
       {
         "quote": "Prompt instructions are attention architecture, not deterministic authority.",
@@ -23,9 +29,9 @@
     ],
     "confidence": "high",
     "novelty": "high",
-    "decision_impact": "high",
+    "mental_model_impact": "high",
     "editor_notes": "Accepted by mocked editor scoring rules.",
     "discard_reason": null,
-    "created_at": "2026-05-24T18:55:34.981644-07:00"
+    "created_at": "2026-05-24T19:43:06.737219-07:00"
   }
 ]

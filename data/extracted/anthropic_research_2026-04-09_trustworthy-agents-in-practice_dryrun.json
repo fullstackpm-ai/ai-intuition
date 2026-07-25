@@ -1,0 +1,107 @@
+[
+  {
+    "id": "anthropic_research_2026-04-09_trustworthy-agents-in-practice_dryrun_insight_0",
+    "item_id": "anthropic_research_2026-04-09_trustworthy-agents-in-practice_dryrun",
+    "source_id": "anthropic_research",
+    "source_title": "Trustworthy agents in practice",
+    "source_url": "https://www.anthropic.com/research/trustworthy-agents",
+    "lane": "reliability_failures",
+    "status": "accepted",
+    "claim": "Trustworthy agent behavior is a four-layer property, not a model-only property.",
+    "mechanism": "Agent behavior emerges from the interaction of model, harness, tools, and environment. The model supplies capability, but the harness controls instructions and guardrails, tools define available actions, and the environment defines accessible state and stakes.",
+    "intuition_update": "Stop asking whether the model is safe enough in isolation. Ask which layer owns each reliability property: model behavior, harness constraints, tool permissions, or environment boundaries.",
+    "mental_model": "Agent reliability stack = model capability + harness policy + tool affordances + environment exposure.",
+    "design_law": "Assign every agent safety requirement to a structural layer; do not leave high-stakes requirements as model intent alone.",
+    "failure_mode": "Layer collapse: treating model alignment as if it also guarantees harness correctness, tool safety, permissioning, and environment isolation.",
+    "eval_pattern": "Run the same task across controlled variations of harness, tool permissions, and environment exposure to identify which layer actually prevents the failure.",
+    "boundary_conditions": "Most important for agents with external tools, sensitive data, mutable state, or enterprise environments; less important for one-shot informational tasks.",
+    "counterargument": "A stronger model can reduce some failures, but it cannot make an exposed tool or over-broad environment structurally safe.",
+    "strategy_implication": "Durable agent products will compete on controlled execution environments and permission architecture, not only model access.",
+    "learning_experiment": "Take one risky agent task and map every failure prevention mechanism to model, harness, tool, or environment. Mark any requirement that exists only as prose.",
+    "intuition_drill": "For any agent product, ask: which layer would have to fail for this action to become unsafe?",
+    "open_question": "Which agent risks can be reduced by model training versus eliminated only by tool or environment design?",
+    "evidence": [
+      {
+        "quote": "all four layers",
+        "location": "How agents work",
+        "note": "Anthropic says agent behavior depends on model, harness, tools, and environment together."
+      }
+    ],
+    "confidence": "high",
+    "novelty": "medium",
+    "mental_model_impact": "high",
+    "editor_notes": "Codex dry-run extraction.",
+    "discard_reason": null,
+    "created_at": "2026-05-25T00:00:00-07:00"
+  },
+  {
+    "id": "anthropic_research_2026-04-09_trustworthy-agents-in-practice_dryrun_insight_1",
+    "item_id": "anthropic_research_2026-04-09_trustworthy-agents-in-practice_dryrun",
+    "source_id": "anthropic_research",
+    "source_title": "Trustworthy agents in practice",
+    "source_url": "https://www.anthropic.com/research/trustworthy-agents",
+    "lane": "reliability_failures",
+    "status": "accepted",
+    "claim": "Agent oversight should be designed around meaningful judgment units, not raw action count.",
+    "mechanism": "Per-action approvals become friction in long workflows, causing users to tune them out. Plan-level review moves human judgment to the strategy and risk boundary while preserving intervention during execution.",
+    "intuition_update": "More approval prompts do not necessarily mean more control. Oversight works when the user is asked to judge the plan, risk, and escalation points they can actually understand.",
+    "mental_model": "Oversight granularity should match human judgment granularity.",
+    "design_law": "Use plan approval, risk-tiered permissions, and interruptibility for long agent workflows instead of prompting for every low-level action.",
+    "failure_mode": "Approval fatigue: repeated low-value confirmations train users to approve without reviewing, weakening the control they were meant to provide.",
+    "eval_pattern": "Replay long workflows with per-action approval versus plan approval and measure user interruptions, missed risky actions, and completion rate.",
+    "boundary_conditions": "Plan-level approval is safer when actions are reversible and observable; high-stakes irreversible actions still need explicit gates.",
+    "counterargument": "Per-action approval remains appropriate for rare irreversible actions where the action itself is the meaningful judgment unit.",
+    "strategy_implication": null,
+    "learning_experiment": "Prototype a task flow with twenty tool actions. Compare per-action approvals to upfront plan review plus explicit approval only for irreversible steps.",
+    "intuition_drill": "For each approval prompt in an agent workflow, ask what judgment the user is actually expected to make.",
+    "open_question": "Where is the threshold between helpful oversight and approval fatigue for enterprise agents?",
+    "evidence": [
+      {
+        "quote": "overall strategy",
+        "location": "Designing for human control",
+        "note": "Anthropic describes shifting oversight from individual steps to the strategy."
+      }
+    ],
+    "confidence": "high",
+    "novelty": "medium",
+    "mental_model_impact": "high",
+    "editor_notes": "Codex dry-run extraction.",
+    "discard_reason": null,
+    "created_at": "2026-05-25T00:00:00-07:00"
+  },
+  {
+    "id": "anthropic_research_2026-04-09_trustworthy-agents-in-practice_dryrun_insight_2",
+    "item_id": "anthropic_research_2026-04-09_trustworthy-agents-in-practice_dryrun",
+    "source_id": "anthropic_research",
+    "source_title": "Trustworthy agents in practice",
+    "source_url": "https://www.anthropic.com/research/trustworthy-agents",
+    "lane": "reliability_failures",
+    "status": "accepted",
+    "claim": "Prompt injection is an agent-surface problem, not only a model-instruction problem.",
+    "mechanism": "Malicious content becomes dangerous when an agent can read untrusted inputs, interpret hidden instructions, and then use exposed tools in an environment with consequential permissions.",
+    "intuition_update": "Defending against prompt injection means constraining the whole path from untrusted content to external action, not merely teaching the model to ignore bad instructions.",
+    "mental_model": "Prompt injection risk = untrusted observation x model compliance x tool capability x permission scope x environment exposure.",
+    "design_law": "Treat every external content source as untrusted input and every tool as a capability boundary that needs least privilege, monitoring, and recoverability.",
+    "failure_mode": "Instruction laundering: hostile text enters through a trusted workflow object and is converted by the agent into an authorized external action.",
+    "eval_pattern": "Seed realistic workflow data with hidden malicious instructions and test whether the agent reads, propagates, or acts on them under different tool-permission settings.",
+    "boundary_conditions": "Highest risk for agents that read user-controlled or third-party content and can mutate external systems; lower risk for offline tasks with no external action tools.",
+    "counterargument": "Model-level injection detection helps, but Anthropic explicitly frames single-defense approaches as insufficient.",
+    "strategy_implication": "Open protocols and shared benchmarks can become part of agent defensibility because security properties need to move into common infrastructure.",
+    "learning_experiment": "Build a toy inbox agent with read-only, send-with-approval, and unrestricted-send modes. Inject malicious email text and measure whether damage requires tool exposure.",
+    "intuition_drill": "Trace the path from untrusted text to possible external action; every edge is a security boundary.",
+    "open_question": "Which prompt-injection defenses are portable enough to become protocol-level standards?",
+    "evidence": [
+      {
+        "quote": "not a guarantee",
+        "location": "Defending against attacks",
+        "note": "Anthropic says layered safeguards still do not guarantee protection."
+      }
+    ],
+    "confidence": "high",
+    "novelty": "medium",
+    "mental_model_impact": "high",
+    "editor_notes": "Codex dry-run extraction.",
+    "discard_reason": null,
+    "created_at": "2026-05-25T00:00:00-07:00"
+  }
+]

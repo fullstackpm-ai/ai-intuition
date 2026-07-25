@@ -19,9 +19,18 @@ def ensure_data_dirs(root: Path) -> None:
         "data/rejected",
         "data/briefs",
         "data/beliefs",
+        "data/beliefs/llm-mental-models.md",
+        "data/beliefs/strategy-models.md",
+        "data/beliefs/questions-to-investigate.md",
         "data/golden",
     ]:
-        (root / relative).mkdir(parents=True, exist_ok=True)
+        path = root / relative
+        if path.suffix:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if not path.exists():
+                path.write_text(f"# {path.stem.replace('-', ' ').title()}\n")
+        else:
+            path.mkdir(parents=True, exist_ok=True)
 
 
 def write_json(path: Path, payload: Any) -> None:

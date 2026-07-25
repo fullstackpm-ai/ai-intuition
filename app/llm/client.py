@@ -17,11 +17,14 @@ class MockLLMClient:
                 {
                     "claim": "LLMs are unreliable final authorities for business rules when those rules are encoded only in prose.",
                     "mechanism": "Finite attention, position salience, default pretrained behavior, and multi-hop conditional failure make prompt compliance probabilistic.",
-                    "commercial_design_law": "Business-critical rules should be enforced through tools, code, schemas, validators, permissions, and workflow state.",
+                    "intuition_update": "Treat the model as a probabilistic interpreter of rules, not the layer that owns enforcement.",
+                    "mental_model": "Prompting is attention architecture; business rules need structural authority.",
+                    "design_law": "Business-critical rules should be enforced through tools, code, schemas, validators, permissions, and workflow state.",
                     "failure_mode": "Distant conditional / buried negative / pre-commitment drift / authority failure",
                     "eval_pattern": "Replay captured conversations with prompt-only restrictions versus dynamic tool permissions and measure violation rates.",
-                    "ender_implication": "Tour links, fee waivers, ledger edits, and collections actions should be gated by deterministic state and dynamic tool availability.",
-                    "experiment_30_day": "Replay captured conversations with prompt-only restrictions vs dynamic tool permissions and measure violation rates.",
+                    "boundary_conditions": "Prompt-only rules may be acceptable for low-stakes style or tone constraints, but not for safety, money, permissions, or irreversible action.",
+                    "learning_experiment": "Replay captured conversations with prompt-only restrictions versus dynamic tool permissions and measure violation rates.",
+                    "intuition_drill": "Explain the difference between a model understanding a rule and a system enforcing a rule.",
                     "evidence": [
                         {
                             "quote": "Prompt instructions are attention architecture, not deterministic authority.",
@@ -31,23 +34,26 @@ class MockLLMClient:
                     ],
                     "confidence": "high",
                     "novelty": "high",
-                    "decision_impact": "high",
+                    "mental_model_impact": "high",
                 }
             ]
         return [
             {
                 "claim": "The source discusses AI progress.",
                 "mechanism": "",
-                "commercial_design_law": None,
+                "intuition_update": "",
+                "mental_model": None,
+                "design_law": None,
                 "failure_mode": None,
                 "eval_pattern": None,
-                "ender_implication": None,
-                "experiment_30_day": None,
+                "boundary_conditions": None,
+                "learning_experiment": None,
+                "intuition_drill": None,
                 "evidence": [],
                 "confidence": "low",
                 "novelty": "low",
-                "decision_impact": "low",
-                "discard_reason": "Generic summary with no mechanism, Ender implication, experiment, or evidence.",
+                "mental_model_impact": "low",
+                "discard_reason": "Generic summary with no mechanism, intuition update, learning experiment, or evidence.",
             }
         ]
 

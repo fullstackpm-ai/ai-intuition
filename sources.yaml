@@ -1,11 +1,260 @@
+version: 1
+
 sources:
-  - id: openai
-    name: OpenAI
+  # -------------------------
+  # P0: Frontier primitives
+  # -------------------------
+
+  - id: openai_research
+    name: OpenAI Research
+    priority: p0
     lane: frontier_primitives
-    type: rss_or_html
-    urls:
-      - https://openai.com/news/
-    enabled: true
+    type: lab_research
+    source_url: "https://openai.com/news/research/"
+    adapter: html_index
+    extraction_goal: "Mechanisms that change what agents can reliably infer, plan, use, or evaluate."
+    include_topics:
+      - agents
+      - tool use
+      - reasoning
+      - evals
+      - safety
+      - alignment
+      - multimodal models
+      - model behavior
+      - long context
+      - memory
+
+  - id: openai_news
+    name: OpenAI News
+    priority: p0
+    lane: product_patterns
+    type: lab_product_and_research_updates
+    source_url: "https://openai.com/news/"
+    rss_url: "https://openai.com/news/rss.xml"
+    adapter: rss_or_html
+    extraction_goal: "Product launches and system patterns that reveal new user-model-tool contracts."
+    include_topics:
+      - ChatGPT Agent
+      - Codex
+      - Operator
+      - tools
+      - connectors
+      - memory
+      - evals
+      - enterprise
+      - safety
+
+  - id: anthropic_research
+    name: Anthropic Research
+    priority: p0
+    lane: reliability_failures
+    type: lab_research
+    source_url: "https://www.anthropic.com/research"
+    adapter: html_index
+    extraction_goal: "Failure modes, eval methods, interpretability, and reliability constraints for agents."
+    include_topics:
+      - interpretability
+      - alignment
+      - agentic misalignment
+      - model behavior
+      - evaluations
+      - long context
+      - safety
+      - tool use
+
+  - id: anthropic_engineering
+    name: Anthropic Engineering
+    priority: p0
+    lane: product_patterns
+    type: engineering_blog
+    source_url: "https://www.anthropic.com/engineering"
+    adapter: html_index
+    extraction_goal: "Practical harness, context, tool, and reliability patterns from deployed agent systems."
+    include_topics:
+      - Claude Code
+      - context engineering
+      - tool design
+      - agent reliability
+      - production incidents
+      - evaluation
+      - prompt architecture
+
+  - id: anthropic_alignment_science
+    name: Anthropic Alignment Science
+    priority: p0
+    lane: reliability_failures
+    type: alignment_research
+    source_url: "https://alignment.anthropic.com/"
+    adapter: html_index
+    extraction_goal: "Behavioral failure modes and research findings that should become product controls."
+    include_topics:
+      - behavioral evals
+      - honesty
+      - deception
+      - chain of thought
+      - alignment
+      - model introspection
+      - jailbreaks
+      - adversarial behavior
+
+  - id: anthropic_frontier_red_team
+    name: Anthropic Frontier Red Team
+    priority: p1
+    lane: reliability_failures
+    type: red_team_research
+    source_url: "https://red.anthropic.com/"
+    adapter: html_index
+    extraction_goal: "Security, misuse, and autonomous-system risks relevant to commercial agent boundaries."
+    include_topics:
+      - cybersecurity
+      - biosecurity
+      - autonomous systems
+      - misuse
+      - red teaming
+      - deployment risk
+
+  - id: google_deepmind_blog
+    name: Google DeepMind Blog
+    priority: p0
+    lane: frontier_primitives
+    type: lab_research_and_product
+    source_url: "https://deepmind.google/blog/"
+    adapter: html_index
+    extraction_goal: "Frontier AI breakthroughs, agents, robotics, multimodality, evals, and model behavior."
+    include_topics:
+      - Gemini
+      - agents
+      - robotics
+      - multimodal models
+      - safety
+      - evals
+      - reasoning
+      - world models
+      - tool use
+
+  - id: google_research_blog
+    name: Google Research Blog
+    priority: p1
+    lane: frontier_primitives
+    type: research_blog
+    source_url: "https://research.google/blog/"
+    adapter: html_index
+    extraction_goal: "Research adjacent to DeepMind that may affect agent design, retrieval, infrastructure, or AI UX."
+    include_topics:
+      - machine learning
+      - natural language processing
+      - open source models
+      - retrieval
+      - systems
+      - human-computer interaction
+      - agents
+
+  # -------------------------
+  # P0: Sensemaking podcasts
+  # -------------------------
+
+  - id: dwarkesh_podcast
+    name: Dwarkesh Podcast
+    priority: p0
+    lane: frontier_priors
+    type: podcast
+    source_url: "https://www.dwarkesh.com/"
+    rss_url: "https://www.dwarkesh.com/feed"
+    youtube_url: "https://www.youtube.com/@DwarkeshPatel"
+    adapter: podcast_episode_page_or_youtube
+    transcription_provider: usetranscribe
+    extraction_goal: "Belief updates about frontier trajectories, scaling, agency, inference-time compute, AI labs, and deployment timelines."
+    include_topics:
+      - AI timelines
+      - scaling
+      - agents
+      - inference-time compute
+      - synthetic data
+      - alignment
+      - robotics
+      - AI strategy
+      - frontier labs
+    discard_if:
+      - generic biography
+      - broad futurism without product implication
+      - no changed assumption
+
+  - id: lenny_podcast
+    name: Lenny's Podcast
+    priority: p0
+    lane: product_patterns
+    type: podcast
+    source_url: "https://www.lennysnewsletter.com/podcast"
+    rss_url: "https://api.substack.com/feed/podcast/10845.rss"
+    youtube_url: "https://www.youtube.com/@LennysPodcast"
+    adapter: podcast_episode_page_or_youtube
+    transcription_provider: usetranscribe
+    extraction_goal: "Product, growth, onboarding, trust, UX, and adoption mechanics for AI-enabled products."
+    include_topics:
+      - AI product management
+      - onboarding
+      - user trust
+      - product loops
+      - activation
+      - pricing
+      - workflow adoption
+      - AI UX
+      - product strategy
+    discard_if:
+      - generic PM advice
+      - growth tactics unrelated to AI adoption
+      - no adoption implication
+
+  # -------------------------
+  # P0/P1: Strategy newsletters
+  # -------------------------
+
+  - id: stratechery
+    name: Stratechery
+    priority: p0
+    lane: strategy_value_capture
+    type: strategy_newsletter
+    source_url: "https://stratechery.com/"
+    adapter: rss_or_html
+    rss_url: "https://stratechery.com/feed/"
+    rss_url_env: STRATECHERY_PERSONAL_RSS_URL
+    extraction_goal: "Value-capture implications: who owns the customer, workflow, platform, data, distribution, and complements."
+    include_topics:
+      - AI strategy
+      - aggregation theory
+      - platforms
+      - enterprise software
+      - cloud providers
+      - model labs
+      - app layer
+      - value capture
+      - bundling
+      - commoditization
+    discard_if:
+      - interesting but no market-structure implication
+      - not relevant to AI, SaaS, platforms, or enterprise software
+
+  - id: lenny_newsletter
+    name: Lenny's Newsletter
+    priority: p1
+    lane: product_patterns
+    type: product_newsletter
+    source_url: "https://www.lennysnewsletter.com/"
+    rss_url: "https://www.lennysnewsletter.com/feed"
+    adapter: rss_or_html
+    extraction_goal: "Product and growth lessons that affect AI product adoption, habit formation, or trust."
+    include_topics:
+      - product strategy
+      - AI product
+      - growth
+      - onboarding
+      - retention
+      - product operations
+      - founder lessons
+    discard_if:
+      - generic product advice
+      - not relevant to AI adoption or agent workflows
 
   - id: manual
     name: Manual Inputs
@@ -13,3 +262,31 @@ sources:
     type: manual
     path: data/raw/manual
     enabled: true
+
+tooling:
+  - id: usetranscribe
+    name: useTranscribe
+    type: transcription_provider
+    service_url: "https://www.usetranscribe.io/"
+    priority: p0
+    role: "Convert podcast/video URLs into raw transcripts for downstream extraction."
+    use_for:
+      - dwarkesh_podcast
+      - lenny_podcast
+    notes:
+      - "Use raw transcript as pipeline input."
+      - "Do not rely on provider-generated summaries for synthesis."
+      - "Store transcript permalink and original media URL as provenance."
+
+deferred_sources:
+  # Add only after the first weekly brief is useful.
+  - id: meta_ai_blog
+    reason: "Useful frontier/open-model signal, but not part of the initial narrow source set."
+  - id: microsoft_research_ai
+    reason: "Useful for systems, agents, enterprise AI, and research, but can add noise early."
+  - id: cursor_blog_or_changelog
+    reason: "Useful product-pattern source for agentic coding UX."
+  - id: claude_code_release_notes
+    reason: "Useful product-pattern source, but much of Anthropic Engineering already covers the higher-order lessons."
+  - id: openai_codex_docs_or_changelog
+    reason: "Useful once you want more granular agentic coding/product-loop monitoring."
