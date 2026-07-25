@@ -33,12 +33,14 @@ Do not optimize for coverage. Optimize for surprise, mental-model impact, and re
 - Use `docs/living/` for current explanations, runbooks, north-star direction, and shared processes.
 - Use `docs/point-in-time/` for accepted specs, decisions, and plans that should preserve historical context.
 - Use ProductSpec files under `docs/product-specs/` for consequential repo changes that need explicit intent, scope, acceptance criteria, and evidence.
+- ProductSpec has ceremony cost. Do not use it for tiny fixes, one-off source fetches, weekly content runs, or isolated artifact additions. Use it when changes affect pipeline behavior, artifact semantics, extraction quality, weekly briefs, repo process, or another durable product contract.
 - When the user says "add an issue", "create an issue", or asks to track work in GitHub, create a new GitHub issue in ProductSpec format. Use the ProductSpec issue structure even if a local `.product-spec.md` file is not yet warranted, and link/create the local ProductSpec file when the work is consequential enough to execute.
-- Before planning or coding against a `.product-spec.md`, read it, cite its `spec_revision`, map work to `AC-` IDs, and respect `scope.out` and `scope.cut`.
+- Before planning or coding against a `.product-spec.md`, follow the ProductSpec implementation workflow in `docs/living/project/processes/productspec-implementation-workflow.md`: validate the spec, generate/read the Agent Handoff when tooling is available, map work to `AC-` IDs, respect `scope.out` and `scope.cut`, record an Agent Run receipt for material implementation work, validate the run receipt, and manually reconcile gaps before claiming completion.
 - If implementation pressure conflicts with a Product Spec, propose a spec revision, implementation change, Decision Trace, or reopened work; do not silently change intent.
 - Treat root `SPEC.md` as point-in-time product context unless a living doc explicitly supersedes it.
 - Do not treat generated `data/` artifacts as documentation; they are pipeline evidence and outputs.
 - Follow the artifact commit policy in `docs/living/project/processes/artifact-commit-policy.md`: raw/normalized weekly artifacts can be committed as evidence, but mock/legacy `data/extracted/`, `data/rejected/`, and questionable generated briefs should not be committed as durable knowledge.
+- When changing pipeline behavior, source discovery, ingestion/transcripts, extraction, brief generation, belief updates, or artifact layout, wire the change into observability: run events, source/stage attempts, artifact write/unchanged events, failure classification, and run summaries where applicable. Add or update tests so failures remain diagnosable and regressions are caught.
 - Update living docs alongside code when behavior, commands, source policy, or artifact semantics change.
 
 ## Quality bar

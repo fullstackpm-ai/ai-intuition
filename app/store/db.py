@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Iterable
 
 from app.models import ExtractedInsight, NormalizedItem, RawArtifact, Source
+from app.observability.run import SourceAttempt, StageResult, RunSummary
 from app.time import iso
 
 
@@ -49,6 +50,32 @@ CREATE TABLE IF NOT EXISTS runs (
   command TEXT NOT NULL,
   created_at TEXT NOT NULL,
   metadata_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS run_summaries (
+  run_id TEXT PRIMARY KEY,
+  command TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  finished_at TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  run_dir TEXT NOT NULL,
+  payload_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS source_attempts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id TEXT NOT NULL,
+  source_id TEXT NOT NULL,
+  stage TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  retryability TEXT NOT NULL,
+  payload_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS stage_attempts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id TEXT NOT NULL,
+  stage TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  retryability TEXT NOT NULL,
+  payload_json TEXT NOT NULL
 );
 """
 
@@ -214,3 +241,63 @@ class StateStore:
                 "INSERT INTO runs (command, created_at, metadata_json) VALUES (?, ?, ?)",
                 (command, iso(now_utc()), json.dumps(metadata, default=str)),
             )
+
+    def upsert_run_summary(self, summary: RunSummary) -> None:
+        with self.conn:
+            self.conn.execute(
+                """
+                INSERT INTO run_summaries (run_id, command, started_at, finished_at, outcome, run_dir, payload_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(run_id) DO UPDATE SET
+                  command=excluded.command,
+                  started_at=excluded.started_at,
+                  finished_at=excluded.finished_at,
+                  outcome=excluded.outcome,
+                  run_dir=excluded.run_dir,
+                  payload_json=excluded.payload_json
+                """,
+                (
+                    summary.run_id,
+                    summary.command,
+                    iso(summary.started_at),
+                    iso(summary.finished_at),
+                    summary.outcome,
+                    summary.run_dir,
+                    summary.model_dump_json(),
+                ),
+            )
+
+    def insert_source_attempts(self, attempts: Iterable[SourceAttempt]) -> None:
+        with self.conn:
+            for attempt in attempts:
+                self.conn.execute(
+                    """
+                    INSERT INTO source_attempts (run_id, source_id, stage, outcome, retryability, payload_json)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        attempt.run_id,
+                        attempt.source_id,
+                        attempt.stage,
+                        attempt.outcome,
+                        attempt.retryability,
+                        attempt.model_dump_json(),
+                    ),
+                )
+
+    def insert_stage_attempts(self, attempts: Iterable[StageResult]) -> None:
+        with self.conn:
+            for attempt in attempts:
+                self.conn.execute(
+                    """
+                    INSERT INTO stage_attempts (run_id, stage, outcome, retryability, payload_json)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        attempt.run_id,
+                        attempt.stage,
+                        attempt.outcome,
+                        attempt.retryability,
+                        attempt.model_dump_json(),
+                    ),
+                )

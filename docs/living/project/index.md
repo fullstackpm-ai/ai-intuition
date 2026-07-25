@@ -25,3 +25,4 @@ Current project-level documentation for the AI Intuition Compiler.
 - [Artifact commit policy](processes/artifact-commit-policy.md)
 - [Documentation model](processes/documentation-model.md)
 - [ProductSpec directive](processes/productspec-directive.md)
+- [ProductSpec implementation workflow](processes/productspec-implementation-workflow.md)

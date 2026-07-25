@@ -1,0 +1,97 @@
+{
+  "agent_run_format_version": "0.1",
+  "run_id": "pipeline-observability-and-failure-regression-harness-run",
+  "agent": {
+    "name": "Codex"
+  },
+  "product_spec": {
+    "path": "docs/product-specs/pipeline-observability-and-failure-regression-harness.product-spec.md",
+    "spec_revision": 2,
+    "content_hash": "sha256:e2569522d6857fd21093d2aab67bb29742ab7a929e2d27d16af7108452b84c07"
+  },
+  "started_at": "2026-07-25T15:30:18.362Z",
+  "completed_at": "2026-07-25T15:31:00.000Z",
+  "status": "completed",
+  "summary": "Implemented repo-first weekly pipeline observability with run folders, structured events, source/stage attempts, failure reports, SQLite summaries, and deterministic regression tests. Evidence: app/observability/run.py, app/cli.py, app/store/db.py, app/ingest/rss.py, app/store/files.py, tests/test_observability.py, and uv run pytest -> 41 passed.",
+  "checked_items": [
+    {
+      "item_id": "AC-1",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-2",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-3",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-4",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-5",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-6",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-7",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-8",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-9",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-10",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-11",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-12",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-13",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-14",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-15",
+      "status": "passed"
+    },
+    {
+      "item_id": "SM-1",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "SM-2",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "SM-3",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "SM-4",
+      "status": "not_checked"
+    }
+  ],
+  "drift": {
+    "detected": false
+  }
+}

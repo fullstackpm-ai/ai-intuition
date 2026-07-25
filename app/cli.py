@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from enum import Enum
 from pathlib import Path
 from typing import Annotated
@@ -10,7 +11,7 @@ import typer
 from app.config import DATA_DIR, DB_PATH, enabled_sources
 from app.ingest.discovery import DateWindow, discover_source
 from app.ingest.manual import ingest_manual_directory, ingest_manual_file
-from app.ingest.rss import ingest_podcast_episode_pages, ingest_rss_or_html_source
+from app.ingest.rss import ingest_discovered_articles, ingest_discovered_podcast_pages
 from app.ingest.transcript import UseTranscribeClient, write_transcript_raw_artifact
 from app.llm.belief_update import update_beliefs
 from app.llm.edit import edit_insights
@@ -19,6 +20,7 @@ from app.llm.synthesize import build_weekly_brief
 from app.logging import console
 from app.models import ExtractedInsight, Source
 from app.normalize.normalize import normalize_raw_artifact
+from app.observability import RunContext, classify_exception
 from app.store.db import StateStore
 from app.store.files import ensure_data_dirs, read_json, write_json
 from app.time import current_week, now_local, parse_since
@@ -64,11 +66,213 @@ def _write_insight_artifacts(insights: list[ExtractedInsight]) -> None:
         write_json(DATA_DIR / "rejected" / f"{item_id}.json", payload)
 
 
-def _write_extraction_packet(item_id: str, body: str) -> Path:
+def _write_extraction_packet(item_id: str, body: str) -> tuple[Path, bool]:
     path = DATA_DIR / "extraction-packets" / f"{item_id}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(body + "\n")
+    payload = body + "\n"
+    changed = not path.exists() or path.read_text() != payload
+    path.write_text(payload)
+    return path, changed
+
+
+def _source_urls(configured: Source) -> list[str]:
+    if configured.rss_url_env and os.getenv(configured.rss_url_env):
+        configured.urls = [os.environ[configured.rss_url_env], *[url for url in configured.urls if url != os.environ[configured.rss_url_env]]]
+    return configured.urls or ([configured.path] if configured.path else [])
+
+
+def _elapsed_ms(started: float) -> int:
+    return int((time.perf_counter() - started) * 1000)
+
+
+def _run_ingest(
+    store: StateStore,
+    since: str = "7d",
+    source: str | None = None,
+    manual: Path | None = None,
+    run_context: RunContext | None = None,
+) -> int:
+    created = 0
+    window = DateWindow(start=parse_since(since), end=now_local())
+    if manual:
+        configured = _manual_source()
+        started = time.perf_counter()
+        if run_context:
+            run_context.event("ingest", "source_attempt_started", "Manual file ingest started.", source=configured, url=str(manual))
+        artifact = ingest_manual_file(manual, configured, DATA_DIR / "raw")
+        changed = store.upsert_raw(artifact)
+        created += int(changed)
+        if run_context:
+            run_context.record_artifact("ingest", artifact.raw_path, artifact.id, changed)
+            run_context.record_source_attempt(
+                configured,
+                stage="ingest",
+                urls_attempted=[str(manual)],
+                item_count=1,
+                artifact_count=1,
+                elapsed_ms=_elapsed_ms(started),
+                outcome="success",
+            )
+        store.log_run("ingest", {"since": since, "source": source, "manual": str(manual), "created": created})
+        return created
+
+    for configured in enabled_sources(source):
+        started = time.perf_counter()
+        adapter = configured.adapter or configured.type
+        urls_attempted = _source_urls(configured)
+        source_artifacts = []
+        item_count = 0
+        if run_context:
+            run_context.event(
+                "ingest",
+                "source_attempt_started",
+                f"Source {configured.id} ingest started.",
+                source=configured,
+                url=urls_attempted[0] if urls_attempted else None,
+                metadata={"urls_attempted": urls_attempted},
+            )
+        try:
+            if adapter == "manual" or configured.type == "manual":
+                source_artifacts = ingest_manual_directory(configured, Path.cwd())
+                item_count = len(source_artifacts)
+            elif adapter in {"rss_or_html", "html_index"}:
+                discovered = discover_source(configured, window, limit=5)
+                item_count = len(discovered)
+                source_artifacts = ingest_discovered_articles(configured, discovered, DATA_DIR / "raw")
+            elif adapter == "podcast_episode_page_or_youtube":
+                discovered = discover_source(configured, window, limit=5)
+                item_count = len(discovered)
+                source_artifacts = ingest_discovered_podcast_pages(
+                    configured,
+                    discovered,
+                    DATA_DIR / "raw",
+                    run_context=run_context,
+                )
+            else:
+                if run_context:
+                    run_context.event(
+                        "ingest",
+                        "source_skipped",
+                        f"Unsupported adapter skipped: {adapter}.",
+                        source=configured,
+                        metadata={"outcome": "skipped_config", "adapter": adapter},
+                    )
+                    run_context.record_source_attempt(
+                        configured,
+                        stage="ingest",
+                        urls_attempted=urls_attempted,
+                        item_count=0,
+                        artifact_count=0,
+                        elapsed_ms=_elapsed_ms(started),
+                        outcome="skipped_config",
+                    )
+                continue
+            source_created = 0
+            for artifact in source_artifacts:
+                changed = store.upsert_raw(artifact)
+                created += int(changed)
+                source_created += int(changed)
+                if run_context:
+                    run_context.record_artifact("ingest", artifact.raw_path, artifact.id, changed)
+            outcome = "healthy_empty" if item_count == 0 and not source_artifacts else "success"
+            if run_context:
+                run_context.record_source_attempt(
+                    configured,
+                    stage="ingest",
+                    urls_attempted=urls_attempted,
+                    item_count=item_count,
+                    artifact_count=len(source_artifacts),
+                    elapsed_ms=_elapsed_ms(started),
+                    outcome=outcome,
+                    metadata={"created": source_created},
+                )
+        except Exception as exc:  # Network sources should not block weekly pipeline progress.
+            console.print(f"[yellow]Skipped {configured.id}: {exc}[/yellow]")
+            if run_context:
+                outcome, retryability, error = classify_exception(exc)
+                error.context = {"source_id": configured.id, "adapter": adapter, "urls_attempted": urls_attempted}
+                run_context.record_source_attempt(
+                    configured,
+                    stage="ingest",
+                    urls_attempted=urls_attempted,
+                    item_count=item_count,
+                    artifact_count=len(source_artifacts),
+                    elapsed_ms=_elapsed_ms(started),
+                    outcome=outcome,
+                    retryability=retryability,
+                    error=error,
+                )
+    store.log_run("ingest", {"since": since, "source": source, "manual": None, "created": created})
+    return created
+
+
+def _run_normalize(store: StateStore, since: str = "7d", item: str | None = None, run_context: RunContext | None = None) -> int:
+    count = 0
+    for artifact in store.list_raw(item):
+        normalized = normalize_raw_artifact(artifact, DATA_DIR / "normalized")
+        store.upsert_normalized(normalized)
+        count += 1
+        if run_context:
+            run_context.record_artifact("normalize", normalized.normalized_path, normalized.id, True)
+    store.log_run("normalize", {"since": since, "item": item, "count": count})
+    return count
+
+
+def _run_extract(
+    store: StateStore,
+    since: str = "7d",
+    item: str | None = None,
+    mode: ExtractionMode = ExtractionMode.mock,
+    run_context: RunContext | None = None,
+) -> int:
+    count = 0
+    if mode == ExtractionMode.api:
+        raise typer.BadParameter("API extraction is not implemented yet. Use --mode codex_packet or --mode mock.")
+    for normalized in store.list_normalized(item):
+        if mode == ExtractionMode.codex_packet:
+            path, changed = _write_extraction_packet(normalized.id, build_extraction_packet(normalized))
+            count += 1
+            if run_context:
+                run_context.record_artifact("extract", str(path), normalized.id, changed)
+            continue
+        insights = extract_insights(normalized, extraction_method="mock")
+        _write_insight_artifacts(insights)
+        store.upsert_insights(insights)
+        count += len(insights)
+        if run_context:
+            run_context.record_artifact("extract", str(DATA_DIR / "extracted" / f"{normalized.id}.json"), normalized.id, True)
+    store.log_run("extract", {"since": since, "item": item, "mode": mode.value, "count": count})
+    return count
+
+
+def _run_edit(store: StateStore, since: str = "7d", run_context: RunContext | None = None) -> int:
+    insights = store.list_insights()
+    edited = edit_insights(insights)
+    _write_insight_artifacts(edited)
+    store.upsert_insights(edited)
+    store.log_run("edit", {"since": since, "count": len(edited)})
+    if run_context:
+        run_context.artifact_counts["edit_written"] += len(edited)
+    return len(insights)
+
+
+def _run_brief(store: StateStore, week: str | None = None, current_week_flag: bool = False, run_context: RunContext | None = None) -> Path:
+    target_week = current_week() if current_week_flag or not week else week
+    _, path = build_weekly_brief(target_week, store.list_insights(), DATA_DIR / "briefs")
+    store.log_run("brief", {"week": target_week, "path": str(path)})
+    if run_context:
+        run_context.record_artifact("brief", str(path), target_week, True)
     return path
+
+
+def _run_belief_update(store: StateStore, week: str | None = None, current_week_flag: bool = False, run_context: RunContext | None = None) -> list[Path]:
+    target_week = current_week() if current_week_flag or not week else week
+    touched = update_beliefs(target_week, store.list_insights(), DATA_DIR / "beliefs")
+    store.log_run("belief-update", {"week": target_week, "touched": [str(path) for path in touched]})
+    if run_context:
+        for path in touched:
+            run_context.record_artifact("belief_update", str(path), path.stem, True)
+    return touched
 
 
 @app.command()
@@ -79,30 +283,8 @@ def ingest(
 ) -> None:
     """Save raw artifacts and update SQLite without calling the LLM."""
     store = _store()
-    created = 0
     try:
-        artifacts = []
-        window = DateWindow(start=parse_since(since), end=now_local())
-        if manual:
-            artifacts.append(ingest_manual_file(manual, _manual_source(), DATA_DIR / "raw"))
-        else:
-            for configured in enabled_sources(source):
-                try:
-                    adapter = configured.adapter or configured.type
-                    if adapter == "manual" or configured.type == "manual":
-                        artifacts.extend(ingest_manual_directory(configured, Path.cwd()))
-                    elif adapter in {"rss_or_html", "html_index"}:
-                        if configured.rss_url_env and os.getenv(configured.rss_url_env):
-                            configured.urls = [os.environ[configured.rss_url_env], *configured.urls]
-                        artifacts.extend(ingest_rss_or_html_source(configured, DATA_DIR / "raw", window=window))
-                    elif adapter == "podcast_episode_page_or_youtube":
-                        artifacts.extend(ingest_podcast_episode_pages(configured, DATA_DIR / "raw", window=window))
-                except Exception as exc:  # Network sources should not block manual pipeline progress.
-                    console.print(f"[yellow]Skipped {configured.id}: {exc}[/yellow]")
-        for artifact in artifacts:
-            if store.upsert_raw(artifact):
-                created += 1
-        store.log_run("ingest", {"since": since, "source": source, "manual": str(manual) if manual else None, "created": created})
+        created = _run_ingest(store, since=since, source=source, manual=manual)
     finally:
         store.close()
     console.print(f"Ingested {created} new raw artifact(s).")
@@ -146,13 +328,8 @@ def normalize(
 ) -> None:
     """Convert raw artifacts into clean markdown normalized items."""
     store = _store()
-    count = 0
     try:
-        for artifact in store.list_raw(item):
-            normalized = normalize_raw_artifact(artifact, DATA_DIR / "normalized")
-            store.upsert_normalized(normalized)
-            count += 1
-        store.log_run("normalize", {"since": since, "item": item, "count": count})
+        count = _run_normalize(store, since=since, item=item)
     finally:
         store.close()
     console.print(f"Normalized {count} item(s).")
@@ -166,20 +343,8 @@ def extract(
 ) -> None:
     """Extract insights or write Codex-ready extraction packets."""
     store = _store()
-    count = 0
     try:
-        if mode == ExtractionMode.api:
-            raise typer.BadParameter("API extraction is not implemented yet. Use --mode codex_packet or --mode mock.")
-        for normalized in store.list_normalized(item):
-            if mode == ExtractionMode.codex_packet:
-                _write_extraction_packet(normalized.id, build_extraction_packet(normalized))
-                count += 1
-                continue
-            insights = extract_insights(normalized, extraction_method="mock")
-            _write_insight_artifacts(insights)
-            store.upsert_insights(insights)
-            count += len(insights)
-        store.log_run("extract", {"since": since, "item": item, "mode": mode.value, "count": count})
+        count = _run_extract(store, since=since, item=item, mode=mode)
     finally:
         store.close()
     if mode == ExtractionMode.codex_packet:
@@ -236,14 +401,10 @@ def edit(since: Annotated[str, typer.Option(help="Currently accepted for command
     """Apply adversarial editor scoring rules to candidate insights."""
     store = _store()
     try:
-        insights = store.list_insights()
-        edited = edit_insights(insights)
-        _write_insight_artifacts(edited)
-        store.upsert_insights(edited)
-        store.log_run("edit", {"since": since, "count": len(edited)})
+        count = _run_edit(store, since=since)
     finally:
         store.close()
-    console.print(f"Edited {len(insights)} insight(s).")
+    console.print(f"Edited {count} insight(s).")
 
 
 @app.command()
@@ -255,9 +416,7 @@ def brief(
     target_week = current_week() if current_week_flag or not week else week
     store = _store()
     try:
-        insights = store.list_insights()
-        _, path = build_weekly_brief(target_week, insights, DATA_DIR / "briefs")
-        store.log_run("brief", {"week": target_week, "path": str(path)})
+        path = _run_brief(store, week=target_week)
     finally:
         store.close()
     console.print(f"Wrote {path}")
@@ -272,8 +431,7 @@ def belief_update(
     target_week = current_week() if current_week_flag or not week else week
     store = _store()
     try:
-        touched = update_beliefs(target_week, store.list_insights(), DATA_DIR / "beliefs")
-        store.log_run("belief-update", {"week": target_week, "touched": [str(path) for path in touched]})
+        touched = _run_belief_update(store, week=target_week)
     finally:
         store.close()
     console.print(f"Updated {len(touched)} belief file(s).")
@@ -315,18 +473,53 @@ def run_weekly(
     extraction_mode: Annotated[ExtractionMode, typer.Option(help="Extraction mode for the weekly run. Defaults to Codex packet mode so weekly runs do not silently create mock-derived briefs.")] = ExtractionMode.codex_packet,
 ) -> None:
     """Run the local weekly pipeline without email unless explicitly requested."""
-    ingest()
-    normalize()
-    extract(mode=extraction_mode)
-    if extraction_mode == ExtractionMode.codex_packet:
-        console.print("[yellow]Skipped edit, brief, and belief update. Import real extracted insight JSON, then run edit/brief/belief-update.[/yellow]")
-        return
-    edit()
-    target_week = current_week()
-    brief(week=target_week)
-    belief_update(week=target_week)
-    if send_email:
-        send(week=target_week)
+    run_context = RunContext(
+        "run-weekly",
+        DATA_DIR,
+        options={"send": send_email, "extraction_mode": extraction_mode.value, "window": {"since": "7d"}},
+    )
+    run_context.start()
+    store = _store()
+    try:
+        with run_context.stage("ingest"):
+            created = _run_ingest(store, run_context=run_context)
+        console.print(f"Ingested {created} new raw artifact(s).")
+        with run_context.stage("normalize"):
+            normalized = _run_normalize(store, run_context=run_context)
+        console.print(f"Normalized {normalized} item(s).")
+        with run_context.stage("extract", {"mode": extraction_mode.value}):
+            extracted = _run_extract(store, mode=extraction_mode, run_context=run_context)
+        if extraction_mode == ExtractionMode.codex_packet:
+            console.print(f"Wrote {extracted} extraction packet(s).")
+            for skipped_stage in ["edit", "brief", "belief_update"]:
+                run_context.record_stage_skip(
+                    skipped_stage,
+                    f"Skipped {skipped_stage}; import real extracted insight JSON before continuing.",
+                    metadata={"reason": "codex_packet_requires_import"},
+                )
+            console.print("[yellow]Skipped edit, brief, and belief update. Import real extracted insight JSON, then run edit/brief/belief-update.[/yellow]")
+            return
+        console.print(f"Extracted {extracted} insight candidate(s).")
+        with run_context.stage("edit"):
+            edited = _run_edit(store, run_context=run_context)
+        console.print(f"Edited {edited} insight(s).")
+        target_week = current_week()
+        with run_context.stage("brief", {"week": target_week}):
+            path = _run_brief(store, week=target_week, run_context=run_context)
+        console.print(f"Wrote {path}")
+        with run_context.stage("belief_update", {"week": target_week}):
+            touched = _run_belief_update(store, week=target_week, run_context=run_context)
+        console.print(f"Updated {len(touched)} belief file(s).")
+        if send_email:
+            with run_context.stage("send", {"week": target_week}):
+                send(week=target_week)
+    finally:
+        summary = run_context.finish()
+        store.upsert_run_summary(summary)
+        store.insert_source_attempts(run_context.source_attempts)
+        store.insert_stage_attempts(run_context.stage_results)
+        store.close()
+        console.print(f"Wrote run diagnostics to {run_context.run_dir}")
 
 
 @app.command("show-json")

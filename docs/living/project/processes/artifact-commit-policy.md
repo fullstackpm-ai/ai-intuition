@@ -21,6 +21,7 @@ The limiting factor is not GitHub Free storage or line-count limits. The limitin
 | `data/rejected/**` | Commit only when the rejection is from real reviewed extraction and is useful evidence. | Mock/legacy rejected JSON is mostly pipeline noise. |
 | `data/briefs/**` | Commit only when the brief is based on real/reviewed extraction provenance. | Mock-derived or questionable briefs should not become durable synthesis. |
 | `data/beliefs/**` | Commit after reviewing that updates came from real accepted insights. | Belief files are the durable knowledge layer. |
+| `data/runs/**` | Commit only when needed as bug evidence, regression fixtures, or spec examples. | Run diagnostics are operational evidence; most live run folders are reproducible or ephemeral. |
 | `data/state.sqlite3` | Do not commit. | SQLite is local index/idempotency state, not durable knowledge. |
 
 ## Deterministic Rules
@@ -31,6 +32,7 @@ The limiting factor is not GitHub Free storage or line-count limits. The limitin
 4. Keep code/docs/tests commits separate from weekly run artifact commits unless the user explicitly asks for one combined snapshot.
 5. Do not let generated artifact volume decide the policy by itself. Size matters only when files are unusually large; semantics decide first.
 6. If an artifact is needed only to reproduce a bug, put it in a fixture path or reference it in a ProductSpec/issue instead of treating it as durable knowledge.
+7. Do not commit `data/runs/**` by default after a normal weekly run. Commit a run folder only when it explains a bug, validates a regression fix, or documents an important operational incident.
 
 ## Weekly Run Recommendation
 

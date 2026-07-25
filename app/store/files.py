@@ -19,6 +19,7 @@ def ensure_data_dirs(root: Path) -> None:
         "data/extraction-packets",
         "data/rejected",
         "data/briefs",
+        "data/runs",
         "data/beliefs",
         "data/beliefs/llm-mental-models.md",
         "data/beliefs/strategy-models.md",

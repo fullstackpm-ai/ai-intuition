@@ -1,14 +1,19 @@
 ---
 spec_format_version: "0.1"
+title: "<Feature Or System Change>"
+artifact_type: "prd"
 spec_revision: 1
 status: draft
 owner: akshay
+author: "akshay"
+created_at: "<ISO-8601 timestamp>"
+updated_at: "<ISO-8601 timestamp>"
 applies_to:
-  - app/
-  - tests/
-  - sources.yaml
-  - data/
-  - docs/
+  - path: app/
+  - path: tests/
+  - path: sources.yaml
+  - path: data/
+  - path: docs/
 ---
 
 # <Feature Or System Change>
@@ -34,7 +39,24 @@ Example:
 
 > If podcast ingestion preserves source provenance and timestamps, then extracted insights can cite evidence more reliably without relying on provider summaries.
 
+## Product Summary
+
+What will exist when this is done?
+
+Example:
+
+> The weekly pipeline emits structured source/run diagnostics that future Codex sessions can read before debugging failed sources.
+
 ## Scope
+
+```productspec-scope
+in:
+  - <IN-1>
+out:
+  - <OUT-1>
+cut:
+  - <CUT-1>
+```
 
 ### In
 
@@ -50,8 +72,12 @@ Example:
 
 ## Acceptance Criteria
 
-- `AC-1`: <Observable build/result criterion.>
-- `AC-2`: <Observable build/result criterion.>
+```productspec-acceptance-criteria
+- id: AC-1
+  criterion: <Observable build/result criterion.>
+- id: AC-2
+  criterion: <Observable build/result criterion.>
+```
 
 ## AI Evals
 
@@ -63,7 +89,14 @@ Use this section only when the change affects model/prompt/extraction behavior.
 
 Post-change indicators. These are not implementation tasks.
 
-- `SM-1`: <Outcome signal to inspect later.>
+```productspec-success-metrics
+- id: SM-1
+  metric: <Outcome signal to inspect later.>
+  target: <target or provisional baseline>
+  window: <measurement window>
+  target_status: provisional
+  target_owner: akshay
+```
 
 ## Related Artifacts
 
@@ -77,4 +110,3 @@ Post-change indicators. These are not implementation tasks.
 - Planned implementation approach:
 - Test plan:
 - Known risks:
-

@@ -12,3 +12,8 @@ Use this folder for `.product-spec.md` files that govern implementation work. Th
 
 See [ProductSpec directive](../living/project/processes/productspec-directive.md).
 
+## Active Specs
+
+- [Real Sensemaking Extraction Workflow](real-sensemaking-extraction-workflow.product-spec.md)
+- [Pipeline Observability and Failure Regression Harness](pipeline-observability-and-failure-regression-harness.product-spec.md)
+- [Source Discovery Hygiene](source-discovery-hygiene.product-spec.md)
