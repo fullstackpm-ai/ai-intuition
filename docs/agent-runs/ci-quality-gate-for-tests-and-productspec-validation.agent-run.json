@@ -1,0 +1,81 @@
+{
+  "agent_run_format_version": "0.1",
+  "run_id": "ci-quality-gate-for-tests-and-productspec-validation-run",
+  "agent": {
+    "name": "Codex"
+  },
+  "product_spec": {
+    "path": "docs/product-specs/ci-quality-gate-for-tests-and-productspec-validation.product-spec.md",
+    "spec_revision": 2,
+    "content_hash": "sha256:956bb5860561b3d08a4ded6586c7b83414d8875e0134db7d34610385e8900887"
+  },
+  "started_at": "2026-07-25T16:17:47.207Z",
+  "completed_at": "2026-07-25T16:17:50Z",
+  "status": "completed",
+  "summary": "Implemented the CI quality gate with a GitHub Actions workflow for pull requests, direct pushes to master, and manual dispatch. Added minimum permissions, locked uv installation, pytest execution, ProductSpec validation, Agent Run receipt validation, ProductSpec graph warning failure, AGENTS.md CI directives, and a regression test for the workflow contract. Local evidence: uv run pytest tests/test_ci_workflow.py -> 4 passed; uv run pytest -> 54 passed; all ProductSpec files validate; all existing Agent Run receipts validate; ProductSpec graph returns no warnings. Remote GitHub Actions evidence is recorded in the GitHub issue after push because the workflow cannot run until committed.",
+  "checked_items": [
+    {
+      "item_id": "AC-1",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-2",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-3",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-4",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-5",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-6",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-7",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-8",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-9",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-10",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-11",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "SM-1",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "SM-2",
+      "status": "passed"
+    },
+    {
+      "item_id": "SM-3",
+      "status": "passed"
+    },
+    {
+      "item_id": "SM-4",
+      "status": "passed"
+    }
+  ],
+  "drift": {
+    "detected": false
+  }
+}

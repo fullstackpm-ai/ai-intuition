@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality-gate:
+    name: Tests and ProductSpec validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Validate ProductSpec files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for spec in docs/product-specs/*.product-spec.md; do
+            npm exec --yes --package @productspec/parser -- productspec validate "$spec"
+          done
+
+      - name: Validate Agent Run receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          receipts=(docs/agent-runs/*.agent-run.json)
+          if [ "${#receipts[@]}" -eq 0 ]; then
+            echo "No Agent Run receipts to validate."
+            exit 0
+          fi
+
+          for receipt in "${receipts[@]}"; do
+            npm exec --yes --package @productspec/parser -- productspec validate-run "$receipt"
+          done
+
+      - name: Validate ProductSpec graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm exec --yes --package @productspec/parser -- productspec graph docs/product-specs --json > /tmp/productspec-graph.json
+          cat /tmp/productspec-graph.json
+          python - <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          payload = json.loads(Path("/tmp/productspec-graph.json").read_text())
+          warnings = payload.get("warnings") or []
+          if warnings:
+              print("ProductSpec graph warnings are treated as CI failures:", file=sys.stderr)
+              for warning in warnings:
+                  print(f"- {warning}", file=sys.stderr)
+              raise SystemExit(1)
+          PY
