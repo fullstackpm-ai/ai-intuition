@@ -56,12 +56,14 @@ If the CLI can summarize and classify post-run artifacts, then the operator can 
 
 ## Product Summary
 
-The project should have an explicit weekly artifact lifecycle: generated artifacts start as working output, then are either deleted, retained locally, committed as evidence, promoted into reviewed knowledge, or attached to a bug/spec as diagnostic evidence.
+The project should have an explicit weekly artifact lifecycle: generated artifacts start as working output, then the system should first decide whether each artifact deserves repo retention at all. Only retained artifacts should then be organized as evidence, review packets, reviewed knowledge, or diagnostic evidence. Non-retained artifacts should remain local only or be deleted after operator review.
 
 The output of this spec should be a policy and, if needed, CLI support that answers after each weekly run:
 
 - What changed?
-- Which artifacts are safe to commit?
+- Does each artifact need to be kept in the repo?
+- If yes, what role should it play in the repo?
+- Which artifacts are safe to stage after review?
 - Which artifacts should be reviewed before commit?
 - Which artifacts should be deleted?
 - Which artifacts are diagnostic evidence for an issue?
@@ -73,6 +75,7 @@ The output of this spec should be a policy and, if needed, CLI support that answ
 in:
   - Define artifact lifecycle states for weekly run outputs.
   - Define commit/delete/promote rules for raw, normalized, extraction packets, extracted JSON, rejected JSON, briefs, beliefs, run diagnostics, and SQLite state.
+  - Make the retention decision explicit before organization: keep-in-repo, keep-local, attach-to-issue, or delete.
   - Decide whether run diagnostics should be committed by default, attached to issues, or kept local.
   - Add a CLI command or dry-run report that classifies current uncommitted weekly artifacts by recommended action.
   - Ensure summarized artifacts such as briefs are committed only when based on real/reviewed extraction provenance.
@@ -94,6 +97,7 @@ cut:
 
 - Define lifecycle states: working, retained-local, evidence, review-packet, reviewed-knowledge, diagnostic, disposable.
 - Define policy for each `data/` path.
+- Define the retention decision before the organization decision.
 - Define how live `data/runs/**` diagnostics relate to GitHub issues.
 - Define what happens to regenerated weekly artifacts when the same week is rerun.
 - Provide a deterministic report of recommended actions after `run-weekly`.

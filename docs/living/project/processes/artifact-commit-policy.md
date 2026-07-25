@@ -24,6 +24,30 @@ The limiting factor is not GitHub Free storage or line-count limits. The limitin
 | `data/runs/**` | Commit only when needed as bug evidence, regression fixtures, or spec examples. | Run diagnostics are operational evidence; most live run folders are reproducible or ephemeral. |
 | `data/state.sqlite3` | Do not commit. | SQLite is local index/idempotency state, not durable knowledge. |
 
+## Retention Decision Model
+
+For every weekly artifact, decide two things in order:
+
+1. **Should this be retained in the repo at all?**
+   - Retain when it is durable source evidence, selected review input, reviewed knowledge, or diagnostic evidence attached to a bug/spec.
+   - Do not retain when it is local idempotency state, regenerated working output, mock/legacy synthesis, or an unreviewed summary.
+2. **If retained, how should it be organized?**
+   - `evidence`: source captures and normalized inputs that preserve provenance for future extraction.
+   - `review-packet`: selected Codex extraction packets that should be reviewed or reused as fixtures.
+   - `reviewed-knowledge`: real extracted JSON, accepted briefs, and belief updates after human or Codex review.
+   - `diagnostic`: run folders or fixtures that explain a failure, validate a regression fix, or document an operational incident.
+   - `retained-local`: useful local state that should remain on disk but not enter git.
+   - `disposable`: generated output that should be deleted after review because it would pollute knowledge history.
+
+Run the classifier before deciding what to stage:
+
+```bash
+uv run aic artifact-report
+uv run aic artifact-report --json
+```
+
+The report is dry-run only. It recommends `commit`, `review`, `keep-local`, `attach-to-issue`, or `delete`; it never deletes files automatically.
+
 ## Deterministic Rules
 
 1. Do not commit `data/extracted/**`, `data/rejected/**`, or `data/briefs/**` when their accepted insight provenance includes `mock` or `legacy`, unless the file is explicitly a test fixture.
@@ -33,14 +57,17 @@ The limiting factor is not GitHub Free storage or line-count limits. The limitin
 5. Do not let generated artifact volume decide the policy by itself. Size matters only when files are unusually large; semantics decide first.
 6. If an artifact is needed only to reproduce a bug, put it in a fixture path or reference it in a ProductSpec/issue instead of treating it as durable knowledge.
 7. Do not commit `data/runs/**` by default after a normal weekly run. Commit a run folder only when it explains a bug, validates a regression fix, or documents an important operational incident.
+8. If rerunning the same week creates same-title artifacts with different content hashes, treat them as possible superseded siblings and review before promoting either version.
 
 ## Weekly Run Recommendation
 
 For a normal weekly run:
 
-1. Commit `data/raw/**` and `data/normalized/**` only if the sourced material should be preserved for later extraction.
-2. Generate or commit `data/extraction-packets/**` only for selected artifacts that need Codex review.
-3. Import Codex-authored or API-authored extraction JSON with explicit provenance.
-4. Commit `data/extracted/**`, `data/rejected/**`, `data/briefs/**`, and `data/beliefs/**` only after real extraction and review.
+1. Run `uv run aic artifact-report`.
+2. Review `data/raw/**` and `data/normalized/**` as evidence candidates. Commit only the material that should be preserved for later extraction.
+3. Review `data/extraction-packets/**` as review-packet candidates. Commit only selected packets that need Codex review or fixture value.
+4. Import Codex-authored or API-authored extraction JSON with explicit provenance.
+5. Commit `data/extracted/**`, `data/rejected/**`, `data/briefs/**`, and `data/beliefs/**` only after real extraction and review.
+6. Keep ordinary `data/runs/**` locally. Attach or commit run diagnostics only when they explain a GitHub issue, ProductSpec, regression fixture, or operational incident.
 
 This keeps the repository useful as a compounding knowledge archive instead of a dump of pipeline byproducts.

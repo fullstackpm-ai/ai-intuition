@@ -8,6 +8,7 @@ from typing import Annotated
 
 import typer
 
+from app.artifacts import build_artifact_report, render_artifact_report_markdown
 from app.config import DATA_DIR, DB_PATH, enabled_sources
 from app.ingest.discovery import DateWindow, discover_source
 from app.ingest.manual import ingest_manual_directory, ingest_manual_file
@@ -435,6 +436,18 @@ def belief_update(
     finally:
         store.close()
     console.print(f"Updated {len(touched)} belief file(s).")
+
+
+@app.command("artifact-report")
+def artifact_report(
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON instead of markdown.")] = False,
+) -> None:
+    """Classify weekly run artifacts by repo retention and organization policy."""
+    report = build_artifact_report(Path.cwd(), data_dir=DATA_DIR)
+    if json_output:
+        console.print_json(data=report.model_dump(mode="json"))
+        return
+    console.print(render_artifact_report_markdown(report))
 
 
 @app.command()

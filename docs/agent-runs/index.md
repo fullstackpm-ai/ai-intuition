@@ -15,7 +15,9 @@ See [ProductSpec directive](../living/project/processes/productspec-directive.md
 ## Handoffs
 
 - [Pipeline Observability and Failure Regression Harness](pipeline-observability-and-failure-regression-harness.agent-handoff.md)
+- [Weekly Run Artifact Retention and Promotion Policy](weekly-run-artifact-retention-and-promotion-policy.agent-handoff.md)
 
 ## Run Receipts
 
 - [Pipeline Observability and Failure Regression Harness](pipeline-observability-and-failure-regression-harness.agent-run.json)
+- [Weekly Run Artifact Retention and Promotion Policy](weekly-run-artifact-retention-and-promotion-policy.agent-run.json)

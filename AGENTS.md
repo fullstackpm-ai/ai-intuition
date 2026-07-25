@@ -39,7 +39,8 @@ Do not optimize for coverage. Optimize for surprise, mental-model impact, and re
 - If implementation pressure conflicts with a Product Spec, propose a spec revision, implementation change, Decision Trace, or reopened work; do not silently change intent.
 - Treat root `SPEC.md` as point-in-time product context unless a living doc explicitly supersedes it.
 - Do not treat generated `data/` artifacts as documentation; they are pipeline evidence and outputs.
-- Follow the artifact commit policy in `docs/living/project/processes/artifact-commit-policy.md`: raw/normalized weekly artifacts can be committed as evidence, but mock/legacy `data/extracted/`, `data/rejected/`, and questionable generated briefs should not be committed as durable knowledge.
+- Follow the artifact commit policy in `docs/living/project/processes/artifact-commit-policy.md`: first decide whether weekly artifacts should be retained in the repo at all, then decide how to organize them as evidence, review packets, reviewed knowledge, diagnostics, local state, or disposable output. Raw/normalized weekly artifacts can be committed as evidence, but mock/legacy `data/extracted/`, `data/rejected/`, and questionable generated briefs should not be committed as durable knowledge.
+- Before staging generated weekly artifacts, run `uv run aic artifact-report` and use its `commit`, `review`, `keep-local`, `attach-to-issue`, or `delete` recommendation as the default cleanup guide.
 - When changing pipeline behavior, source discovery, ingestion/transcripts, extraction, brief generation, belief updates, or artifact layout, wire the change into observability: run events, source/stage attempts, artifact write/unchanged events, failure classification, and run summaries where applicable. Add or update tests so failures remain diagnosable and regressions are caught.
 - Update living docs alongside code when behavior, commands, source policy, or artifact semantics change.
 
@@ -65,6 +66,9 @@ Run tests:
 
 Run weekly pipeline:
 `uv run aic run-weekly`
+
+Classify weekly run artifacts before staging:
+`uv run aic artifact-report`
 
 The default weekly run writes Codex-ready extraction packets and skips mock-derived brief generation. Use `uv run aic run-weekly --extraction-mode mock` only for deterministic fixture/testing flows.
 
