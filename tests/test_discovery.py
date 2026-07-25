@@ -1,11 +1,13 @@
 from datetime import UTC, datetime, timedelta
 
 import httpx
+import pytest
 
 from app.ingest.discovery import (
     DateWindow,
     classify_source_health,
     discover_html_index,
+    discover_openai_research_rss,
     discover_podcast_page_or_youtube,
     discover_rss_or_html,
 )
@@ -116,6 +118,55 @@ def test_openai_research_discovery_keeps_only_research_cards_with_dates(monkeypa
     assert items[0].title == "Separating signal from noise in coding evaluations"
     assert items[0].url == "https://openai.com/index/separating-signal-from-noise/"
     assert items[0].published_at == datetime(2026, 7, 8, tzinfo=UTC)
+
+
+def test_openai_research_rss_filters_first_party_research_category(monkeypatch) -> None:
+    rss = """
+<rss><channel>
+  <item><title>Research evaluation</title><link>https://openai.com/index/research-evaluation</link><pubDate>Wed, 08 Jul 2026 13:00:00 GMT</pubDate><category>Research</category></item>
+  <item><title>Product launch</title><link>https://openai.com/index/product-launch</link><pubDate>Wed, 08 Jul 2026 13:00:00 GMT</pubDate><category>Product</category></item>
+  <item><title>Undated research</title><link>https://openai.com/index/undated-research</link><category>Research</category></item>
+</channel></rss>
+"""
+
+    def fake_get(url, **kwargs):
+        assert str(url) == "https://openai.com/news/rss.xml"
+        return httpx.Response(200, text=rss, request=httpx.Request("GET", str(url)))
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+    source = Source(
+        id="openai_research",
+        name="OpenAI Research",
+        lane="frontier_primitives",
+        type="lab_research",
+        adapter="openai_research_rss",
+        rss_url="https://openai.com/news/rss.xml",
+    )
+
+    items = discover_openai_research_rss(source, DateWindow())
+
+    assert [item.title for item in items] == ["Research evaluation"]
+    assert items[0].published_at == datetime(2026, 7, 8, 13, tzinfo=UTC)
+    assert items[0].metadata["entry_categories"] == ["Research"]
+    assert items[0].metadata["category_filter"] == "Research"
+
+
+def test_openai_research_rss_rejects_malformed_payload(monkeypatch) -> None:
+    def fake_get(url, **kwargs):
+        return httpx.Response(200, text="<rss><channel><item>", request=httpx.Request("GET", str(url)))
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+    source = Source(
+        id="openai_research",
+        name="OpenAI Research",
+        lane="frontier_primitives",
+        type="lab_research",
+        adapter="openai_research_rss",
+        rss_url="https://openai.com/news/rss.xml",
+    )
+
+    with pytest.raises(Exception, match="malformed"):
+        discover_openai_research_rss(source, DateWindow())
 
 
 def test_anthropic_research_discovery_filters_team_pages_and_extracts_dates(monkeypatch) -> None:

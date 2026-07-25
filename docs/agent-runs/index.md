@@ -20,6 +20,7 @@ See [ProductSpec directive](../living/project/processes/productspec-directive.md
 ## Run Receipts
 
 - [Pipeline Observability and Failure Regression Harness](pipeline-observability-and-failure-regression-harness.agent-run.json)
+- [OpenAI Research Discovery Fallback](openai-research-discovery-fallback.agent-run.json)
 - [Weekly Brief Source Attribution](weekly-brief-source-attribution.agent-run.json)
 - [Weekly Run Artifact Retention and Promotion Policy](weekly-run-artifact-retention-and-promotion-policy.agent-run.json)
 - [Weekly Run Artifact Retention and Promotion Policy Revision 2](weekly-run-artifact-retention-and-promotion-policy-revision-2.agent-run.json)

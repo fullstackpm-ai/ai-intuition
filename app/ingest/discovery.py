@@ -83,6 +83,8 @@ class DiscoveryError(RuntimeError):
 
 def discover_source(source: Source, window: DateWindow, limit: int = 10) -> list[DiscoveredItem]:
     adapter = source.adapter or source.type
+    if adapter == "openai_research_rss":
+        return discover_openai_research_rss(source, window, limit)
     if adapter == "rss_or_html":
         return discover_rss_or_html(source, window, limit)
     if adapter == "html_index":
@@ -90,6 +92,53 @@ def discover_source(source: Source, window: DateWindow, limit: int = 10) -> list
     if adapter == "podcast_episode_page_or_youtube":
         return discover_podcast_page_or_youtube(source, window, limit)
     raise DiscoveryError(f"Unsupported discovery adapter: {adapter}")
+
+
+def discover_openai_research_rss(source: Source, window: DateWindow, limit: int = 10) -> list[DiscoveredItem]:
+    """Discover only first-party Research-tagged entries from OpenAI's public RSS feed."""
+    if not source.rss_url:
+        raise DiscoveryError("openai_research_rss requires source.rss_url")
+
+    response = httpx.get(source.rss_url, follow_redirects=True, timeout=20, headers=HTTP_HEADERS)
+    response.raise_for_status()
+    parsed = feedparser.parse(response.text)
+    entries = getattr(parsed, "entries", [])
+    if getattr(parsed, "bozo", False):
+        raise DiscoveryError("OpenAI Research RSS payload is malformed")
+
+    discovered: list[DiscoveredItem] = []
+    research_tagged_entries = 0
+    for entry in entries:
+        categories = _entry_categories(entry)
+        if "research" not in {category.lower() for category in categories}:
+            continue
+        research_tagged_entries += 1
+        link = getattr(entry, "link", None)
+        if not link or not _looks_like_candidate(source, str(link), "openai.com", "article"):
+            continue
+        published_at = _entry_date(entry)
+        if published_at is None or not window.contains(published_at):
+            continue
+        title = _clean_candidate_title(source, str(getattr(entry, "title", None) or _title_from_url(str(link))))
+        discovered.append(
+            DiscoveredItem(
+                source_id=source.id,
+                title=title,
+                url=str(link),
+                item_type="article",
+                published_at=published_at,
+                metadata={
+                    "discovered_via": source.rss_url,
+                    "adapter": "openai_research_rss",
+                    "entry_categories": categories,
+                    "category_filter": "Research",
+                    "research_tagged_entries": research_tagged_entries,
+                },
+            )
+        )
+        if len(discovered) >= limit:
+            break
+    return _dedupe(discovered)
 
 
 def discover_rss_or_html(source: Source, window: DateWindow, limit: int = 10) -> list[DiscoveredItem]:
@@ -460,6 +509,14 @@ def _entry_audio_url(entry: object) -> str | None:
         if href and (not enclosure_type or str(enclosure_type).startswith("audio/")):
             return str(href)
     return None
+
+
+def _entry_categories(entry: object) -> list[str]:
+    return [
+        str(tag.get("term"))
+        for tag in getattr(entry, "tags", [])
+        if hasattr(tag, "get") and tag.get("term")
+    ]
 
 
 def _entry_full_content(entry: object) -> str | None:

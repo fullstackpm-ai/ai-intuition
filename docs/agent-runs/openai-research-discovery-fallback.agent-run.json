@@ -1,0 +1,55 @@
+{
+  "agent_run_format_version": "0.1",
+  "run_id": "openai-research-discovery-fallback-run",
+  "agent": {
+    "name": "unknown"
+  },
+  "product_spec": {
+    "path": "docs/product-specs/openai-research-discovery-fallback.product-spec.md",
+    "spec_revision": 1,
+    "content_hash": "sha256:ad8add6b886dbac68f3c1a14572b43335c85b6a5d52d00c08339aef629d69f52"
+  },
+  "started_at": "2026-07-25T22:59:29.591Z",
+  "status": "draft",
+  "checked_items": [
+    {
+      "item_id": "AC-1",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "AC-2",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "AC-3",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "AC-4",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "AC-5",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "AC-6",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "AC-7",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "SM-1",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "SM-2",
+      "status": "not_checked"
+    }
+  ],
+  "drift": {
+    "detected": false
+  }
+}

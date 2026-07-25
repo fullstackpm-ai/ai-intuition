@@ -10,8 +10,8 @@ sources:
     priority: p0
     lane: frontier_primitives
     type: lab_research
-    source_url: "https://openai.com/news/research/"
-    adapter: html_index
+    rss_url: "https://openai.com/news/rss.xml"
+    adapter: openai_research_rss
     extraction_goal: "Mechanisms that change what agents can reliably infer, plan, use, or evaluate."
     include_topics:
       - agents

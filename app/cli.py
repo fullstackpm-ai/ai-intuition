@@ -125,6 +125,13 @@ def _run_ingest(
         source_artifacts = []
         item_count = 0
         source_health = "not_checked"
+        discovery_diagnostics: dict[str, object] = {}
+        if configured.id == "openai_research":
+            discovery_diagnostics = {
+                "selected_discovery_path": configured.rss_url,
+                "category_filter": "Research",
+                "adapter_policy": "openai_research_rss",
+            }
         if run_context:
             run_context.event(
                 "ingest",
@@ -139,10 +146,12 @@ def _run_ingest(
             if adapter == "manual" or configured.type == "manual":
                 source_artifacts = ingest_manual_directory(configured, Path.cwd())
                 item_count = len(source_artifacts)
-            elif adapter in {"rss_or_html", "html_index"}:
+            elif adapter in {"rss_or_html", "html_index", "openai_research_rss"}:
                 discovered = discover_source(configured, window, limit=5)
                 item_count = len(discovered)
                 source_health = classify_source_health(configured, discovered)
+                if configured.id == "openai_research":
+                    discovery_diagnostics["candidate_count"] = item_count
                 source_artifacts = ingest_discovered_articles(configured, discovered, DATA_DIR / "raw", run_context=run_context)
             elif adapter == "podcast_episode_page_or_youtube":
                 discovered = discover_source(configured, window, limit=5)
@@ -193,7 +202,12 @@ def _run_ingest(
                 outcome = "blocked_auth"
                 retryability = "operator_action_required"
             if run_context:
-                metadata = {"created": source_created, "skipped_items": len(skipped_item_events), "source_health": source_health}
+                metadata = {
+                    "created": source_created,
+                    "skipped_items": len(skipped_item_events),
+                    "source_health": source_health,
+                    **discovery_diagnostics,
+                }
                 if skipped_item_events:
                     metadata["skipped_item_urls"] = [event.url for event in skipped_item_events if event.url]
                     metadata["skipped_item_outcomes"] = [
@@ -214,7 +228,12 @@ def _run_ingest(
             console.print(f"[yellow]Skipped {configured.id}: {exc}[/yellow]")
             if run_context:
                 outcome, retryability, error = classify_exception(exc)
-                error.context = {"source_id": configured.id, "adapter": adapter, "urls_attempted": urls_attempted}
+                error.context = {
+                    "source_id": configured.id,
+                    "adapter": adapter,
+                    "urls_attempted": urls_attempted,
+                    **discovery_diagnostics,
+                }
                 run_context.record_source_attempt(
                     configured,
                     stage="ingest",
@@ -225,6 +244,7 @@ def _run_ingest(
                     outcome=outcome,
                     retryability=retryability,
                     error=error,
+                    metadata=discovery_diagnostics,
                 )
     store.log_run("ingest", {"since": since, "source": source, "manual": None, "created": created})
     return created

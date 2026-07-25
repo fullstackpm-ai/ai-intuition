@@ -381,3 +381,33 @@ def test_normalize_quality_event_includes_fallback_diagnostics(tmp_path, monkeyp
     assert stored_raw.metadata["quality_status"] == "usable"
     assert stored_raw.metadata["word_count"] == 300
     assert stored_raw.metadata["selected_fallback"] == "generic_html_fallback"
+
+
+def test_openai_research_rss_failure_records_selected_path_and_filter(tmp_path, monkeypatch) -> None:
+    data_dir = tmp_path / "data"
+    source = Source(
+        id="openai_research",
+        name="OpenAI Research",
+        lane="frontier_primitives",
+        type="lab_research",
+        adapter="openai_research_rss",
+        rss_url="https://openai.com/news/rss.xml",
+    )
+    monkeypatch.setattr(cli, "DATA_DIR", data_dir)
+    monkeypatch.setattr(cli, "DB_PATH", data_dir / "state.sqlite3")
+    monkeypatch.setattr(cli, "enabled_sources", lambda source_id=None: [source])
+    monkeypatch.setattr(cli, "discover_source", lambda *_args, **_kwargs: (_ for _ in ()).throw(_http_error(403)))
+    context = RunContext("ingest", data_dir, run_id="openai-research-rss-failure")
+    context.start()
+    store = StateStore(data_dir / "state.sqlite3")
+    try:
+        cli._run_ingest(store, source="openai_research", run_context=context)
+    finally:
+        store.close()
+
+    attempt = context.source_attempts[0]
+    assert attempt.outcome == "blocked_auth"
+    assert attempt.metadata["selected_discovery_path"] == "https://openai.com/news/rss.xml"
+    assert attempt.metadata["category_filter"] == "Research"
+    assert attempt.error is not None
+    assert attempt.error.context["adapter_policy"] == "openai_research_rss"
