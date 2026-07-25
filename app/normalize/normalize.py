@@ -27,6 +27,7 @@ def _html_to_text(html: str) -> str:
 
 def normalize_raw_artifact(artifact: RawArtifact, output_root: Path) -> NormalizedItem:
     raw_path = Path(artifact.raw_path)
+    portable_raw_path = _portable_path(raw_path)
     if raw_path.suffix.lower() in {".md", ".markdown"}:
         _, text = read_markdown(raw_path)
         notes = "manual markdown"
@@ -47,7 +48,7 @@ def normalize_raw_artifact(artifact: RawArtifact, output_root: Path) -> Normaliz
             "title": artifact.title,
             "url": artifact.url,
             "published_at": artifact.published_at.isoformat() if artifact.published_at else None,
-            "raw_path": artifact.raw_path,
+            "raw_path": portable_raw_path,
         },
         text,
     )
@@ -61,9 +62,16 @@ def normalize_raw_artifact(artifact: RawArtifact, output_root: Path) -> Normaliz
         title=artifact.title,
         url=artifact.url,
         published_at=artifact.published_at,
-        raw_path=artifact.raw_path,
+        raw_path=portable_raw_path,
         normalized_path=str(destination),
         text=text,
         word_count=len(text.split()),
         extraction_notes=notes,
     )
+
+
+def _portable_path(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(Path.cwd().resolve()))
+    except ValueError:
+        return str(path)

@@ -3,7 +3,10 @@ id: lenny_podcast_2026-07-19_why-netflix-is-betting-on-systems-thinkers-not-spec
 lane: product_patterns
 published_at: '2026-07-19T12:31:21+00:00'
 raw_artifact_id: lenny_podcast_2026-07-19_why-netflix-is-betting-on-systems-thinkers-not-specialists-in-the-ai-era_1c3ee4d0
+raw_path: data/raw/podcasts/lenny_podcast_2026-07-19_why-netflix-is-betting-on-systems-thinkers-not-specialists-in-the-ai-era_1c3ee4d0.md
 source_id: lenny_podcast
+source_name: Lenny's Podcast
+source_type: podcast_transcript
 title: Why Netflix is betting on systems thinkers—not specialists—in the AI era |
   Elizabeth Stone (CPTO)
 url: https://www.youtube.com/watch?v=t0GiTyz4syY

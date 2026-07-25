@@ -3,7 +3,10 @@ id: anthropic_alignment_science_undated_diffuse-ai-control-on-fuzzy-tasks-we-int
 lane: reliability_failures
 published_at: null
 raw_artifact_id: anthropic_alignment_science_undated_diffuse-ai-control-on-fuzzy-tasks-we-introduce-a-red-teaming-framework-f_355cd103
+raw_path: data/raw/lab-posts/anthropic_alignment_science_undated_diffuse-ai-control-on-fuzzy-tasks-we-introduce-a-red-teaming-framework-f_355cd103.html
 source_id: anthropic_alignment_science
+source_name: Anthropic Alignment Science
+source_type: html
 title: Diffuse AI Control on Fuzzy Tasks We introduce a red-teaming framework for
   evaluating training interventions against diffuse threats from scheming AIs, such
   as sandbagging on alignment research.

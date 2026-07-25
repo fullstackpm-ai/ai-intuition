@@ -3,7 +3,10 @@ id: anthropic_alignment_science_undated_agentic-misalignment-in-summer-2026-we-p
 lane: reliability_failures
 published_at: null
 raw_artifact_id: anthropic_alignment_science_undated_agentic-misalignment-in-summer-2026-we-present-four-case-studies-of-fron_9d08e4a5
+raw_path: data/raw/lab-posts/anthropic_alignment_science_undated_agentic-misalignment-in-summer-2026-we-present-four-case-studies-of-fron_9d08e4a5.html
 source_id: anthropic_alignment_science
+source_name: Anthropic Alignment Science
+source_type: html
 title: Agentic Misalignment in Summer 2026 We present four case studies of frontier
   models from multiple developers sabotaging code, assisting fraud, falsifying AI-monitoring
   labels, and coaching whistleblowers.

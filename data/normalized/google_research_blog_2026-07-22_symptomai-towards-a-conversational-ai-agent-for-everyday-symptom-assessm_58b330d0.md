@@ -3,7 +3,10 @@ id: google_research_blog_2026-07-22_symptomai-towards-a-conversational-ai-agent-
 lane: frontier_primitives
 published_at: '2026-07-22T00:00:00+00:00'
 raw_artifact_id: google_research_blog_2026-07-22_symptomai-towards-a-conversational-ai-agent-for-everyday-symptom-assessm_58b330d0
+raw_path: data/raw/lab-posts/google_research_blog_2026-07-22_symptomai-towards-a-conversational-ai-agent-for-everyday-symptom-assessm_58b330d0.html
 source_id: google_research_blog
+source_name: Google Research Blog
+source_type: html
 title: 'SymptomAI: Towards a conversational AI agent for everyday symptom assessment
   General Science · Health & Bioscience · Natural Language Processing · Responsible
   AI'

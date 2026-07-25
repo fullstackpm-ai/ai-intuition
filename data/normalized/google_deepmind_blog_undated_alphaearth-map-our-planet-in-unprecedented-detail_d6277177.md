@@ -3,7 +3,10 @@ id: google_deepmind_blog_undated_alphaearth-map-our-planet-in-unprecedented-deta
 lane: frontier_primitives
 published_at: null
 raw_artifact_id: google_deepmind_blog_undated_alphaearth-map-our-planet-in-unprecedented-detail_d6277177
+raw_path: data/raw/lab-posts/google_deepmind_blog_undated_alphaearth-map-our-planet-in-unprecedented-detail_d6277177.html
 source_id: google_deepmind_blog
+source_name: Google DeepMind Blog
+source_type: html
 title: AlphaEarth Map our planet in unprecedented detail
 url: https://deepmind.google/blog/alphaearth-foundations-helps-map-our-planet-in-unprecedented-detail/
 ---

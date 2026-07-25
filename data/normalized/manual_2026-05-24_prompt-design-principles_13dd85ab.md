@@ -3,7 +3,10 @@ id: manual_2026-05-24_prompt-design-principles_13dd85ab
 lane: manual
 published_at: '2026-05-24T00:00:00'
 raw_artifact_id: manual_2026-05-24_prompt-design-principles_13dd85ab
+raw_path: data/raw/manual/manual_2026-05-24_prompt-design-principles_13dd85ab.md
 source_id: manual
+source_name: Manual Inputs
+source_type: manual
 title: Prompt Design Principles
 url: internal://golden/prompt-design-principles
 ---

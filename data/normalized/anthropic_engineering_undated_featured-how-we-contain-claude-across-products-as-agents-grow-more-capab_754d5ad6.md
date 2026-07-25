@@ -3,7 +3,10 @@ id: anthropic_engineering_undated_featured-how-we-contain-claude-across-products
 lane: product_patterns
 published_at: null
 raw_artifact_id: anthropic_engineering_undated_featured-how-we-contain-claude-across-products-as-agents-grow-more-capab_754d5ad6
+raw_path: data/raw/lab-posts/anthropic_engineering_undated_featured-how-we-contain-claude-across-products-as-agents-grow-more-capab_754d5ad6.html
 source_id: anthropic_engineering
+source_name: Anthropic Engineering
+source_type: html
 title: Featured How we contain Claude across products As agents grow more capable,
   so does their potential blast radius. The engineering question is how to cap it.
   Here’s what we’ve learned building containment for claude.ai, Claude Code, and Cowork.

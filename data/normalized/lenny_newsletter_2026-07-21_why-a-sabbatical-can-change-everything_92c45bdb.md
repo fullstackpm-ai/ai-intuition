@@ -3,7 +3,10 @@ id: lenny_newsletter_2026-07-21_why-a-sabbatical-can-change-everything_92c45bdb
 lane: product_patterns
 published_at: '2026-07-21T12:45:10+00:00'
 raw_artifact_id: lenny_newsletter_2026-07-21_why-a-sabbatical-can-change-everything_92c45bdb
+raw_path: data/raw/lab-posts/lenny_newsletter_2026-07-21_why-a-sabbatical-can-change-everything_92c45bdb.html
 source_id: lenny_newsletter
+source_name: Lenny's Newsletter
+source_type: html
 title: Why a sabbatical can change everything
 url: https://www.lennysnewsletter.com/p/how-to-take-a-sabbatical
 ---

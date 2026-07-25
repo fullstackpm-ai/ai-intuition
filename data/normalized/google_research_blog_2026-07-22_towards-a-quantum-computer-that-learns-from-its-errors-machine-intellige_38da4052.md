@@ -3,7 +3,10 @@ id: google_research_blog_2026-07-22_towards-a-quantum-computer-that-learns-from-
 lane: frontier_primitives
 published_at: '2026-07-22T00:00:00+00:00'
 raw_artifact_id: google_research_blog_2026-07-22_towards-a-quantum-computer-that-learns-from-its-errors-machine-intellige_38da4052
+raw_path: data/raw/lab-posts/google_research_blog_2026-07-22_towards-a-quantum-computer-that-learns-from-its-errors-machine-intellige_38da4052.html
 source_id: google_research_blog
+source_name: Google Research Blog
+source_type: html
 title: Towards a quantum computer that learns from its errors Machine Intelligence
   · Quantum
 url: https://research.google/blog/towards-a-quantum-computer-that-learns-from-its-errors/

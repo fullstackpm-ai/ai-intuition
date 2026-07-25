@@ -3,7 +3,10 @@ id: anthropic_alignment_science_undated_sleight-bench-finding-blind-spots-in-ai-
 lane: reliability_failures
 published_at: null
 raw_artifact_id: anthropic_alignment_science_undated_sleight-bench-finding-blind-spots-in-ai-monitors-we-build-a-benchmark-of_69e199a6
+raw_path: data/raw/lab-posts/anthropic_alignment_science_undated_sleight-bench-finding-blind-spots-in-ai-monitors-we-build-a-benchmark-of_69e199a6.html
 source_id: anthropic_alignment_science
+source_name: Anthropic Alignment Science
+source_type: html
 title: 'SLEIGHT-Bench: Finding Blind Spots in AI Monitors We build a benchmark of
   evasive transcripts exploiting blind spots of frontier monitoring systems.'
 url: https://alignment.anthropic.com/2026/sleight-bench/

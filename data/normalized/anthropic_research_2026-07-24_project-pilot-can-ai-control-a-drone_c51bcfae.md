@@ -3,7 +3,10 @@ id: anthropic_research_2026-07-24_project-pilot-can-ai-control-a-drone_c51bcfae
 lane: reliability_failures
 published_at: '2026-07-24T00:00:00+00:00'
 raw_artifact_id: anthropic_research_2026-07-24_project-pilot-can-ai-control-a-drone_c51bcfae
+raw_path: data/raw/lab-posts/anthropic_research_2026-07-24_project-pilot-can-ai-control-a-drone_c51bcfae.html
 source_id: anthropic_research
+source_name: Anthropic Research
+source_type: html
 title: 'Project Pilot: Can AI control a drone?'
 url: https://www.anthropic.com/research/project-pilot
 ---

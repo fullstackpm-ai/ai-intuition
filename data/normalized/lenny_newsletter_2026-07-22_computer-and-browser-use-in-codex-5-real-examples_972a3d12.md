@@ -3,7 +3,10 @@ id: lenny_newsletter_2026-07-22_computer-and-browser-use-in-codex-5-real-example
 lane: product_patterns
 published_at: '2026-07-22T12:03:38+00:00'
 raw_artifact_id: lenny_newsletter_2026-07-22_computer-and-browser-use-in-codex-5-real-examples_972a3d12
+raw_path: data/raw/lab-posts/lenny_newsletter_2026-07-22_computer-and-browser-use-in-codex-5-real-examples_972a3d12.html
 source_id: lenny_newsletter
+source_name: Lenny's Newsletter
+source_type: html
 title: Computer and browser use in Codex (5 real examples)
 url: https://www.lennysnewsletter.com/p/computer-and-browser-use-in-codex
 ---

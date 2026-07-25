@@ -3,7 +3,10 @@ id: lenny_newsletter_2026-07-20_how-the-founder-of-morning-brew-built-a-claude-c
 lane: product_patterns
 published_at: '2026-07-20T12:04:47+00:00'
 raw_artifact_id: lenny_newsletter_2026-07-20_how-the-founder-of-morning-brew-built-a-claude-content-machine-that-neve_352f6f53
+raw_path: data/raw/lab-posts/lenny_newsletter_2026-07-20_how-the-founder-of-morning-brew-built-a-claude-content-machine-that-neve_352f6f53.html
 source_id: lenny_newsletter
+source_name: Lenny's Newsletter
+source_type: html
 title: How the founder of Morning Brew built a Claude content machine that never runs
   out of ideas and never sounds like slop | Alex Lieberman
 url: https://www.lennysnewsletter.com/p/how-the-founder-of-morning-brew-built

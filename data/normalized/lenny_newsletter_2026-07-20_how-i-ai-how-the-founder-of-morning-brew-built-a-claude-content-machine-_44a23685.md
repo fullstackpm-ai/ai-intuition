@@ -3,7 +3,10 @@ id: lenny_newsletter_2026-07-20_how-i-ai-how-the-founder-of-morning-brew-built-a
 lane: product_patterns
 published_at: '2026-07-20T15:01:56+00:00'
 raw_artifact_id: lenny_newsletter_2026-07-20_how-i-ai-how-the-founder-of-morning-brew-built-a-claude-content-machine-_44a23685
+raw_path: data/raw/lab-posts/lenny_newsletter_2026-07-20_how-i-ai-how-the-founder-of-morning-brew-built-a-claude-content-machine-_44a23685.html
 source_id: lenny_newsletter
+source_name: Lenny's Newsletter
+source_type: html
 title: "\U0001F399️ How I AI: How the founder of Morning Brew built a Claude content
   machine that never runs out of ideas"
 url: https://www.lennysnewsletter.com/p/how-i-ai-how-the-founder-of-morning

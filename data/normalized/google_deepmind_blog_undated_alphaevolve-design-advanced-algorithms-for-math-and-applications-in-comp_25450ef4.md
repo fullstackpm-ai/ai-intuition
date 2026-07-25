@@ -3,7 +3,10 @@ id: google_deepmind_blog_undated_alphaevolve-design-advanced-algorithms-for-math
 lane: frontier_primitives
 published_at: null
 raw_artifact_id: google_deepmind_blog_undated_alphaevolve-design-advanced-algorithms-for-math-and-applications-in-comp_25450ef4
+raw_path: data/raw/lab-posts/google_deepmind_blog_undated_alphaevolve-design-advanced-algorithms-for-math-and-applications-in-comp_25450ef4.html
 source_id: google_deepmind_blog
+source_name: Google DeepMind Blog
+source_type: html
 title: AlphaEvolve Design advanced algorithms for math and applications in computing
 url: https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/
 ---

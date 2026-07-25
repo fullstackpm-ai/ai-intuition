@@ -3,7 +3,10 @@ id: anthropic_alignment_science_undated_modular-pretraining-enables-access-contr
 lane: reliability_failures
 published_at: null
 raw_artifact_id: anthropic_alignment_science_undated_modular-pretraining-enables-access-control-we-study-a-method-for-isolati_6080c18a
+raw_path: data/raw/lab-posts/anthropic_alignment_science_undated_modular-pretraining-enables-access-control-we-study-a-method-for-isolati_6080c18a.html
 source_id: anthropic_alignment_science
+source_name: Anthropic Alignment Science
+source_type: html
 title: Modular Pretraining Enables Access Control We study a method for isolating
   dual use knowledge to specific modules within a language model. These modules can
   be switched on or off to control what the model knows.

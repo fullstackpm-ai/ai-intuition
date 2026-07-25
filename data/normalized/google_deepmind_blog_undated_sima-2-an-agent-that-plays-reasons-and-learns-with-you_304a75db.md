@@ -3,7 +3,10 @@ id: google_deepmind_blog_undated_sima-2-an-agent-that-plays-reasons-and-learns-w
 lane: frontier_primitives
 published_at: null
 raw_artifact_id: google_deepmind_blog_undated_sima-2-an-agent-that-plays-reasons-and-learns-with-you_304a75db
+raw_path: data/raw/lab-posts/google_deepmind_blog_undated_sima-2-an-agent-that-plays-reasons-and-learns-with-you_304a75db.html
 source_id: google_deepmind_blog
+source_name: Google DeepMind Blog
+source_type: html
 title: SIMA 2 An agent that plays, reasons, and learns with you
 url: https://deepmind.google/blog/sima-2-an-agent-that-plays-reasons-and-learns-with-you-in-virtual-3d-worlds/
 ---

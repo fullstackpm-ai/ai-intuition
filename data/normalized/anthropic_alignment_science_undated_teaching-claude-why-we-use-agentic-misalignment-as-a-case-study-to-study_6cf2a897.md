@@ -3,7 +3,10 @@ id: anthropic_alignment_science_undated_teaching-claude-why-we-use-agentic-misal
 lane: reliability_failures
 published_at: null
 raw_artifact_id: anthropic_alignment_science_undated_teaching-claude-why-we-use-agentic-misalignment-as-a-case-study-to-study_6cf2a897
+raw_path: data/raw/lab-posts/anthropic_alignment_science_undated_teaching-claude-why-we-use-agentic-misalignment-as-a-case-study-to-study_6cf2a897.html
 source_id: anthropic_alignment_science
+source_name: Anthropic Alignment Science
+source_type: html
 title: Teaching Claude Why We use agentic misalignment as a case study to study how
   well safety-training techniques generalize.
 url: https://alignment.anthropic.com/2026/teaching-claude-why/
