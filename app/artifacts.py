@@ -99,9 +99,15 @@ def classify_artifacts(root: Path, path_statuses: list[tuple[Path, str]]) -> lis
         same_item = siblings.get(_stable_item_key(root, path), [])
         if same_item:
             decision.evidence.append(f"Possible rerun sibling(s): {', '.join(same_item)}")
-            if decision.recommendation == "commit":
+            if status == "??":
+                decision.lifecycle = "disposable"
+                decision.recommendation = "delete"
+                decision.reason = (
+                    f"{decision.reason} Existing retained sibling found; delete this regenerated duplicate unless you intentionally "
+                    "want a new point-in-time capture."
+                )
+            elif decision.recommendation == "commit":
                 decision.recommendation = "review"
-            if "rerun duplicate" not in decision.reason:
                 decision.reason = f"{decision.reason} Review possible rerun duplicate before promotion."
         decisions.append(decision)
     return decisions
@@ -133,24 +139,27 @@ def classify_artifact(root: Path, path: Path, git_status: str = "") -> ArtifactD
             path=relative,
             git_status=git_status,
             lifecycle="evidence",
-            recommendation="review",
-            reason="Raw captures are provenance. Commit only when this source evidence should become durable history.",
+            recommendation="commit",
+            reason="Raw captures are point-in-time source evidence for the weekly corpus and should be retained unless superseded.",
+            evidence=["rubric=point-in-time evidence"],
         )
     if section == "normalized":
         return ArtifactDecision(
             path=relative,
             git_status=git_status,
-            lifecycle="working",
-            recommendation="review",
-            reason="Normalized items are derived extraction inputs. Commit with paired raw evidence or selected review work.",
+            lifecycle="evidence",
+            recommendation="commit",
+            reason="Normalized items are reproducible point-in-time extraction inputs and should be retained with their raw source evidence.",
+            evidence=["rubric=point-in-time evidence"],
         )
     if section == "extraction-packets":
         return ArtifactDecision(
             path=relative,
             git_status=git_status,
-            lifecycle="review-packet",
-            recommendation="review",
-            reason="Extraction packets are Codex review inputs. Commit only selected packets that should be reviewed or used as fixtures.",
+            lifecycle="working",
+            recommendation="delete",
+            reason="Bulk extraction packets are regenerable working output. Delete by default unless intentionally selected as a fixture or review packet.",
+            evidence=["rubric=working output"],
         )
     if section in {"extracted", "rejected"}:
         return _classify_extraction_json(root, path, git_status, section)
@@ -161,8 +170,9 @@ def classify_artifact(root: Path, path: Path, git_status: str = "") -> ArtifactD
             path=relative,
             git_status=git_status,
             lifecycle="reviewed-knowledge",
-            recommendation="review",
-            reason="Belief files are durable knowledge. Commit only after confirming updates came from real accepted insights.",
+            recommendation="commit",
+            reason="Belief files are living knowledge. Commit changes when they reflect current reviewed understanding.",
+            evidence=["rubric=living knowledge"],
         )
     if section == "runs":
         return _classify_run_diagnostic(root, path, git_status)
@@ -213,9 +223,9 @@ def _classify_extraction_json(root: Path, path: Path, git_status: str, section: 
             path=relative,
             git_status=git_status,
             lifecycle="reviewed-knowledge",
-            recommendation="review",
-            reason=f"{section} JSON has real extraction provenance. Review quality before committing as durable knowledge.",
-            evidence=[f"extraction_methods={real}"],
+            recommendation="commit",
+            reason=f"{section} JSON has real extraction provenance and is reviewed knowledge eligible for retention.",
+            evidence=[f"extraction_methods={real}", "rubric=point-in-time reviewed knowledge"],
         )
     return ArtifactDecision(
         path=relative,
@@ -246,9 +256,9 @@ def _classify_brief(root: Path, path: Path, git_status: str) -> ArtifactDecision
             path=relative,
             git_status=git_status,
             lifecycle="reviewed-knowledge",
-            recommendation="review",
-            reason="Brief is based on real extraction provenance. Review synthesis before committing.",
-            evidence=[f"extraction_provenance={provenance}"],
+            recommendation="commit",
+            reason="Brief is a point-in-time weekly synthesis based on real extraction provenance.",
+            evidence=[f"extraction_provenance={provenance}", "rubric=point-in-time synthesis"],
         )
     return ArtifactDecision(
         path=relative,

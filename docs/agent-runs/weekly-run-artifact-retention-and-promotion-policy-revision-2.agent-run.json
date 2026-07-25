@@ -1,0 +1,69 @@
+{
+  "agent_run_format_version": "0.1",
+  "run_id": "weekly-run-artifact-retention-and-promotion-policy-revision-2-run",
+  "agent": {
+    "name": "Codex"
+  },
+  "product_spec": {
+    "path": "docs/product-specs/weekly-run-artifact-retention-and-promotion-policy.product-spec.md",
+    "spec_revision": 2,
+    "content_hash": "sha256:a20b6b19a075404db3f0d20abe808b67ec8eb389a9b4f8c00676269da7b49898"
+  },
+  "started_at": "2026-07-25T16:07:14.373Z",
+  "completed_at": "2026-07-25T16:10:00.000Z",
+  "status": "completed",
+  "summary": "Revised artifact retention from conservative review recommendations to deterministic keep/drop/organize decisions using the repo's living versus point-in-time rubric. Raw and normalized artifacts are point-in-time evidence and default to commit; bulk extraction packets are regenerable working output and default to delete; real extracted JSON, source-grounded briefs, and belief files default to commit; degraded run diagnostics default to attach-to-issue; SQLite remains local. Evidence: app/artifacts.py, AGENTS.md, docs/living/project/processes/artifact-commit-policy.md, docs/living/project/processes/documentation-model.md, tests/test_artifact_retention.py, uv run aic artifact-report --json, and uv run pytest -> 50 passed.",
+  "checked_items": [
+    {
+      "item_id": "AC-1",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-2",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-3",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-4",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-5",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-6",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-7",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-8",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-9",
+      "status": "passed"
+    },
+    {
+      "item_id": "SM-1",
+      "status": "passed"
+    },
+    {
+      "item_id": "SM-2",
+      "status": "not_checked"
+    },
+    {
+      "item_id": "SM-3",
+      "status": "not_checked"
+    }
+  ],
+  "drift": {
+    "detected": false
+  }
+}

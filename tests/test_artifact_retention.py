@@ -15,7 +15,7 @@ def _decision_by_path(root: Path, paths: list[Path]) -> dict[str, object]:
     return {decision.path: decision for decision in decisions}
 
 
-def test_classifies_raw_normalized_and_packets_as_reviewable_artifacts(tmp_path) -> None:
+def test_classifies_raw_normalized_and_packets_by_documentation_rubric(tmp_path) -> None:
     root = tmp_path
     raw = root / "data/raw/lab-posts/source_2026-07-24_example_abcd1234.html"
     normalized = root / "data/normalized/source_2026-07-24_example_abcd1234.md"
@@ -27,8 +27,9 @@ def test_classifies_raw_normalized_and_packets_as_reviewable_artifacts(tmp_path)
     decisions = _decision_by_path(root, [raw, normalized, packet])
 
     assert decisions["data/raw/lab-posts/source_2026-07-24_example_abcd1234.html"].lifecycle == "evidence"
-    assert decisions["data/normalized/source_2026-07-24_example_abcd1234.md"].recommendation == "review"
-    assert decisions["data/extraction-packets/source_2026-07-24_example_abcd1234.md"].lifecycle == "review-packet"
+    assert decisions["data/raw/lab-posts/source_2026-07-24_example_abcd1234.html"].recommendation == "commit"
+    assert decisions["data/normalized/source_2026-07-24_example_abcd1234.md"].recommendation == "commit"
+    assert decisions["data/extraction-packets/source_2026-07-24_example_abcd1234.md"].recommendation == "delete"
 
 
 def test_extracted_json_with_mock_or_legacy_provenance_is_disposable(tmp_path) -> None:
@@ -45,7 +46,7 @@ def test_extracted_json_with_mock_or_legacy_provenance_is_disposable(tmp_path) -
     assert decisions["data/rejected/legacy.json"].recommendation == "delete"
 
 
-def test_real_extracted_json_is_reviewed_before_durable_commit(tmp_path) -> None:
+def test_real_extracted_json_is_retained_as_reviewed_knowledge(tmp_path) -> None:
     root = tmp_path
     path = root / "data/extracted/codex.json"
     write_json(path, [{"extraction_method": "codex_packet", "status": "accepted"}])
@@ -53,7 +54,7 @@ def test_real_extracted_json_is_reviewed_before_durable_commit(tmp_path) -> None
     decision = _decision_by_path(root, [path])["data/extracted/codex.json"]
 
     assert decision.lifecycle == "reviewed-knowledge"
-    assert decision.recommendation == "review"
+    assert decision.recommendation == "commit"
     assert "codex_packet" in decision.evidence[0]
 
 
@@ -70,7 +71,7 @@ def test_briefs_require_real_extraction_provenance(tmp_path) -> None:
 
     assert decisions["data/briefs/2026-W30.md"].recommendation == "delete"
     assert decisions["data/briefs/2026-W31.md"].recommendation == "delete"
-    assert decisions["data/briefs/2026-W32.md"].recommendation == "review"
+    assert decisions["data/briefs/2026-W32.md"].recommendation == "commit"
 
 
 def test_beliefs_runs_and_sqlite_have_distinct_retention_rules(tmp_path) -> None:
@@ -87,12 +88,12 @@ def test_beliefs_runs_and_sqlite_have_distinct_retention_rules(tmp_path) -> None
 
     decisions = _decision_by_path(root, [belief, run_file, sqlite])
 
-    assert decisions["data/beliefs/llm-mental-models.md"].recommendation == "review"
+    assert decisions["data/beliefs/llm-mental-models.md"].recommendation == "commit"
     assert decisions["data/runs/run-1/summary.json"].recommendation == "attach-to-issue"
     assert decisions["data/state.sqlite3"].recommendation == "keep-local"
 
 
-def test_rerun_siblings_are_called_out_before_promotion(tmp_path, monkeypatch) -> None:
+def test_untracked_rerun_siblings_are_recommended_for_deletion(tmp_path, monkeypatch) -> None:
     root = tmp_path
     tracked = root / "data/raw/lab-posts/source_2026-07-24_same-title_11111111.html"
     changed = root / "data/raw/lab-posts/source_2026-07-24_same-title_22222222.html"
@@ -103,9 +104,10 @@ def test_rerun_siblings_are_called_out_before_promotion(tmp_path, monkeypatch) -
     monkeypatch.setattr("app.artifacts._tracked_data_paths", lambda root: [tracked])
     decision = classify_artifacts(root, [(changed, "??")])[0]
 
-    assert decision.recommendation == "review"
-    assert "rerun duplicate" in decision.reason
-    assert "11111111" in decision.evidence[0]
+    assert decision.recommendation == "delete"
+    assert decision.lifecycle == "disposable"
+    assert "regenerated duplicate" in decision.reason
+    assert any("11111111" in evidence for evidence in decision.evidence)
 
 
 def test_artifact_report_can_render_json_and_markdown(tmp_path) -> None:
@@ -119,7 +121,7 @@ def test_artifact_report_can_render_json_and_markdown(tmp_path) -> None:
     report = build_artifact_report(root, changed_paths=[(raw, "??"), (mock, "??")])
     markdown = render_artifact_report_markdown(report)
 
-    assert report.recommendations == {"review": 1, "delete": 1}
+    assert report.recommendations == {"commit": 1, "delete": 1}
     assert "| `delete` | `disposable` | `data/extracted/mock.json` |" in markdown
 
 
@@ -129,13 +131,13 @@ def test_artifact_report_cli_uses_classifier(tmp_path, monkeypatch) -> None:
     raw.write_text("raw")
 
     monkeypatch.setattr(cli, "DATA_DIR", tmp_path / "data")
-    monkeypatch.setattr(cli, "build_artifact_report", lambda root, data_dir: build_artifact_report(root, changed_paths=[(raw, "??")], data_dir=data_dir))
+    monkeypatch.setattr(cli, "build_artifact_report", lambda root, data_dir: build_artifact_report(tmp_path, changed_paths=[(raw, "??")], data_dir=data_dir))
 
     result = CliRunner().invoke(cli.app, ["artifact-report", "--json"])
 
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
-    assert payload["recommendations"] == {"review": 1}
+    assert payload["recommendations"] == {"commit": 1}
 
 
 def test_collect_expands_untracked_run_directories(tmp_path, monkeypatch) -> None:

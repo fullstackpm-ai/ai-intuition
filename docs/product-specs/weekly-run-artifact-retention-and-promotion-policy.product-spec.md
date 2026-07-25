@@ -2,12 +2,12 @@
 spec_format_version: "0.1"
 title: "Weekly Run Artifact Retention and Promotion Policy"
 artifact_type: "prd"
-spec_revision: 1
-status: proposed
+spec_revision: 2
+status: accepted
 owner: akshay
 author: "akshay"
 created_at: "2026-07-25T15:45:00Z"
-updated_at: "2026-07-25T15:45:00Z"
+updated_at: "2026-07-25T16:45:00Z"
 github_issue: https://github.com/fullstackpm-ai/ai-intuition/issues/9
 applies_to:
   - path: data/raw/
@@ -52,11 +52,11 @@ This ambiguity creates two risks:
 
 If weekly run artifacts have a deterministic retention and promotion workflow, then the repo can stay clean while preserving the evidence needed for real synthesis, debugging, and future review.
 
-If the CLI can summarize and classify post-run artifacts, then the operator can make commit/delete/promote decisions without inspecting dozens of files by hand.
+If the CLI can summarize and classify post-run artifacts using the repo's living versus point-in-time rubric, then the operator can make commit/delete/promote decisions without inspecting dozens of files by hand.
 
 ## Product Summary
 
-The project should have an explicit weekly artifact lifecycle: generated artifacts start as working output, then the system should first decide whether each artifact deserves repo retention at all. Only retained artifacts should then be organized as evidence, review packets, reviewed knowledge, or diagnostic evidence. Non-retained artifacts should remain local only or be deleted after operator review.
+The project should have an explicit weekly artifact lifecycle: generated artifacts start as working output, then the system should first decide whether each artifact deserves repo retention at all. Only retained artifacts should then be organized as point-in-time evidence, point-in-time synthesis, living knowledge, selected review packets, or diagnostic evidence. Non-retained artifacts should remain local only or be deleted after operator review.
 
 The output of this spec should be a policy and, if needed, CLI support that answers after each weekly run:
 
@@ -64,7 +64,7 @@ The output of this spec should be a policy and, if needed, CLI support that answ
 - Does each artifact need to be kept in the repo?
 - If yes, what role should it play in the repo?
 - Which artifacts are safe to stage after review?
-- Which artifacts should be reviewed before commit?
+- Which artifacts are ambiguous enough to require human review before commit?
 - Which artifacts should be deleted?
 - Which artifacts are diagnostic evidence for an issue?
 - Which artifacts are durable knowledge?
@@ -74,6 +74,7 @@ The output of this spec should be a policy and, if needed, CLI support that answ
 ```productspec-scope
 in:
   - Define artifact lifecycle states for weekly run outputs.
+  - Use the living versus point-in-time documentation rubric as the default retention decision model for data artifacts.
   - Define commit/delete/promote rules for raw, normalized, extraction packets, extracted JSON, rejected JSON, briefs, beliefs, run diagnostics, and SQLite state.
   - Make the retention decision explicit before organization: keep-in-repo, keep-local, attach-to-issue, or delete.
   - Decide whether run diagnostics should be committed by default, attached to issues, or kept local.
@@ -96,6 +97,7 @@ cut:
 ### In
 
 - Define lifecycle states: working, retained-local, evidence, review-packet, reviewed-knowledge, diagnostic, disposable.
+- Use the living versus point-in-time rubric to make default decisions automatically.
 - Define policy for each `data/` path.
 - Define the retention decision before the organization decision.
 - Define how live `data/runs/**` diagnostics relate to GitHub issues.
@@ -123,7 +125,7 @@ cut:
 - id: AC-2
   criterion: Each major data path has a deterministic default action: data/raw, data/normalized, data/extraction-packets, data/extracted, data/rejected, data/briefs, data/beliefs, data/runs, and data/state.sqlite3.
 - id: AC-3
-  criterion: A post-run command or report can classify uncommitted artifacts into commit, review, keep-local, attach-to-issue, or delete recommendations.
+  criterion: A post-run command or report can classify uncommitted artifacts into commit, review, keep-local, attach-to-issue, or delete recommendations, with review reserved for ambiguous cases.
 - id: AC-4
   criterion: The policy distinguishes raw evidence from summarized knowledge and prevents unreviewed/mock summaries from being recommended as durable knowledge.
 - id: AC-5

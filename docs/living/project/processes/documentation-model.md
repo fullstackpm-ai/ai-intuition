@@ -15,6 +15,7 @@ This repo uses a scaled-down version of a living versus point-in-time documentat
 - Existing root-level `SPEC.md` is treated as point-in-time product context unless a newer living document explicitly supersedes it.
 - Consequential implementation intent should use ProductSpec files under `docs/product-specs/`.
 - Generated artifacts under `data/` are pipeline outputs, not docs. Do not reorganize them into `docs/`.
+- The living versus point-in-time rubric still governs whether generated artifacts belong in the repo: source captures, normalized inputs, real extraction JSON, and weekly briefs are point-in-time evidence/synthesis; belief files are living knowledge; run diagnostics are issue/spec evidence only when they explain failures; SQLite and regenerable working outputs stay local or are deleted.
 - Living docs must be updated when behavior, commands, source policy, or artifact semantics change.
 - Point-in-time docs should not be rewritten to match later reality. Add a newer superseding doc instead.
 - Do not create heavy team hierarchies, visibility controls, or paired narrative/directive docs unless this repo grows enough to justify them.
