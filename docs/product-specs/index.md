@@ -17,3 +17,4 @@ See [ProductSpec directive](../living/project/processes/productspec-directive.md
 - [Real Sensemaking Extraction Workflow](real-sensemaking-extraction-workflow.product-spec.md)
 - [Pipeline Observability and Failure Regression Harness](pipeline-observability-and-failure-regression-harness.product-spec.md)
 - [Source Discovery Hygiene](source-discovery-hygiene.product-spec.md)
+- [Weekly Run Artifact Retention and Promotion Policy](weekly-run-artifact-retention-and-promotion-policy.product-spec.md)
