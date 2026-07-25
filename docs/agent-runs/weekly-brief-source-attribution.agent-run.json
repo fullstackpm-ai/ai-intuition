@@ -1,0 +1,77 @@
+{
+  "agent_run_format_version": "0.1",
+  "run_id": "weekly-brief-source-attribution-run",
+  "agent": {
+    "name": "Codex"
+  },
+  "product_spec": {
+    "path": "docs/product-specs/weekly-brief-source-attribution.product-spec.md",
+    "spec_revision": 1,
+    "content_hash": "sha256:b037fc6771546be37ca06a5b95483335a657ef5e92d30d6de24b65cba175ec12"
+  },
+  "started_at": "2026-07-25T16:34:40.589Z",
+  "completed_at": "2026-07-25T16:34:44Z",
+  "status": "completed",
+  "summary": "Implemented weekly brief source attribution for Issue #7. Added structured SourceReference metadata, richer normalized/extracted source fields, import propagation from NormalizedItem, deterministic source reference construction, compact [S1]/[S2] markers, a bottom Sources section, source attribution frontmatter, missing-metadata warnings, and a brief_attribution_summarized observability event. Evidence: app/models.py, app/normalize/normalize.py, app/llm/extract.py, app/llm/synthesize.py, app/observability/run.py, app/cli.py, tests/test_weekly_brief_source_attribution.py. Verification: uv run pytest tests/test_weekly_brief_source_attribution.py -> 6 passed; uv run pytest -> 60 passed; ProductSpec validate passed; ProductSpec graph returned no warnings.",
+  "checked_items": [
+    {
+      "item_id": "AC-1",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-2",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-3",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-4",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-5",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-6",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-7",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-8",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-9",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-10",
+      "status": "passed"
+    },
+    {
+      "item_id": "AC-11",
+      "status": "passed"
+    },
+    {
+      "item_id": "SM-1",
+      "status": "passed"
+    },
+    {
+      "item_id": "SM-2",
+      "status": "passed"
+    },
+    {
+      "item_id": "SM-3",
+      "status": "passed"
+    }
+  ],
+  "drift": {
+    "detected": false
+  }
+}

@@ -74,10 +74,13 @@ class NormalizedItem(BaseModel):
     id: str
     raw_artifact_id: str
     source_id: str
+    source_name: str | None = None
+    source_type: str | None = None
     lane: str
     title: str
     url: str | None = None
     published_at: datetime | None = None
+    raw_path: str | None = None
     normalized_path: str
     text: str
     word_count: int
@@ -90,12 +93,34 @@ class Evidence(BaseModel):
     note: str | None = None
 
 
+class SourceReference(BaseModel):
+    ref_id: str | None = None
+    source_id: str
+    source_name: str | None = None
+    source_type: str | None = None
+    item_id: str
+    raw_artifact_id: str | None = None
+    title: str
+    url: str | None = None
+    published_at: datetime | None = None
+    raw_path: str | None = None
+    normalized_path: str | None = None
+    extraction_methods: list[ExtractionMethod] = Field(default_factory=list)
+    insight_ids: list[str] = Field(default_factory=list)
+
+
 class ExtractedInsight(BaseModel):
     id: str
     item_id: str
     source_id: str
+    source_name: str | None = None
+    source_type: str | None = None
     source_title: str
     source_url: str | None = None
+    raw_artifact_id: str | None = None
+    raw_path: str | None = None
+    normalized_path: str | None = None
+    published_at: datetime | None = None
     lane: str
     status: Literal["candidate", "accepted", "rejected", "needs_human_review"]
     claim: str
@@ -120,6 +145,7 @@ class ExtractedInsight(BaseModel):
     extraction_method: ExtractionMethod = "legacy"
     extraction_model: str | None = None
     extraction_notes: str | None = None
+    source_references: list[SourceReference] = Field(default_factory=list)
     created_at: datetime
 
     @model_validator(mode="before")
@@ -182,3 +208,6 @@ class WeeklyBrief(BaseModel):
     human_review_flags: list[str]
     extraction_provenance: dict[str, int] = Field(default_factory=dict)
     extraction_warning: str | None = None
+    source_references: list[SourceReference] = Field(default_factory=list)
+    source_attribution_summary: dict[str, int] = Field(default_factory=dict)
+    source_attribution_warnings: list[str] = Field(default_factory=list)

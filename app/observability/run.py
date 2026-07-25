@@ -34,6 +34,7 @@ EventType = Literal[
     "fallback_attempted",
     "fallback_succeeded",
     "fallback_failed",
+    "brief_attribution_summarized",
 ]
 Outcome = Literal[
     "success",

@@ -259,9 +259,19 @@ def _run_edit(store: StateStore, since: str = "7d", run_context: RunContext | No
 
 def _run_brief(store: StateStore, week: str | None = None, current_week_flag: bool = False, run_context: RunContext | None = None) -> Path:
     target_week = current_week() if current_week_flag or not week else week
-    _, path = build_weekly_brief(target_week, store.list_insights(), DATA_DIR / "briefs")
-    store.log_run("brief", {"week": target_week, "path": str(path)})
+    brief, path = build_weekly_brief(target_week, store.list_insights(), DATA_DIR / "briefs")
+    source_attribution = {
+        "source_attribution_summary": brief.source_attribution_summary,
+        "source_attribution_warnings": brief.source_attribution_warnings,
+    }
+    store.log_run("brief", {"week": target_week, "path": str(path), **source_attribution})
     if run_context:
+        run_context.event(
+            "brief",
+            "brief_attribution_summarized",
+            "Brief source attribution summarized.",
+            metadata=source_attribution,
+        )
         run_context.record_artifact("brief", str(path), target_week, True)
     return path
 
