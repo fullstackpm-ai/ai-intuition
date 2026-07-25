@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
+import json
 import re
 from typing import Literal
 from urllib.parse import parse_qs, urljoin, urlparse
@@ -32,6 +33,23 @@ ANTHROPIC_CATEGORIES = (
     "Policy",
 )
 OPENAI_RESEARCH_CATEGORIES = ("Research", "Publication", "Milestone", "Conclusion")
+DATE_ENRICHMENT_SOURCE_IDS = {
+    "google_deepmind_blog",
+    "anthropic_alignment_science",
+    "anthropic_engineering",
+}
+SOURCE_HEALTH_REVIEW_IDS = {"anthropic_frontier_red_team"}
+ARTICLE_DATE_META_KEYS = {
+    "article:published_time",
+    "date",
+    "datepublished",
+    "dc.date",
+    "dc.date.issued",
+    "publishdate",
+    "pubdate",
+    "published",
+    "published_time",
+}
 
 
 @dataclass(frozen=True)
@@ -116,13 +134,23 @@ def discover_html_index(
     urls: list[str] | None = None,
 ) -> list[DiscoveredItem]:
     discovered: list[DiscoveredItem] = []
+    candidate_limit = max(limit, min(limit * 5, 25))
     for index_url in urls or source.urls:
         response = httpx.get(index_url, follow_redirects=True, timeout=20, headers=HTTP_HEADERS)
         response.raise_for_status()
-        discovered.extend(_discover_links_from_html(source, index_url, response.text, item_type))
-        if len(discovered) >= limit:
+        discovered.extend(_discover_links_from_html(source, str(response.url), response.text, item_type))
+        if len(discovered) >= candidate_limit:
             break
-    return _dedupe([item for item in discovered if window.contains(item.published_at)][:limit])
+    enriched = _enrich_missing_dates(source, _dedupe(discovered[:candidate_limit]))
+    return [item for item in enriched if window.contains(item.published_at)][:limit]
+
+
+def classify_source_health(source: Source, items: list[DiscoveredItem]) -> str:
+    if items:
+        return "healthy"
+    if source.id in SOURCE_HEALTH_REVIEW_IDS:
+        return "needs_source_path_review"
+    return "healthy_empty"
 
 
 def discover_podcast_page_or_youtube(source: Source, window: DateWindow, limit: int = 10) -> list[DiscoveredItem]:
@@ -215,6 +243,103 @@ def _discover_links_from_html(source: Source, base_url: str, html: str, item_typ
             )
         )
     return items
+
+
+def _enrich_missing_dates(source: Source, items: list[DiscoveredItem]) -> list[DiscoveredItem]:
+    if source.id not in DATE_ENRICHMENT_SOURCE_IDS:
+        return items
+
+    enriched: list[DiscoveredItem] = []
+    for item in items:
+        if item.published_at is not None or item.item_type != "article":
+            enriched.append(item)
+            continue
+        metadata = dict(item.metadata)
+        metadata["date_enrichment_checked_url"] = item.url
+        try:
+            response = httpx.get(item.url, follow_redirects=True, timeout=20, headers=HTTP_HEADERS)
+            response.raise_for_status()
+        except httpx.HTTPError as exc:
+            metadata["date_enrichment_status"] = "fetch_failed"
+            metadata["date_enrichment_error"] = exc.__class__.__name__
+            enriched.append(replace(item, metadata=metadata))
+            continue
+
+        published_at, via = _published_at_from_article_html(response.text)
+        if published_at:
+            metadata["date_enrichment_status"] = "success"
+            metadata["date_enriched_via"] = via
+            enriched.append(replace(item, published_at=published_at, metadata=metadata))
+            continue
+
+        metadata["date_enrichment_status"] = "no_date_found"
+        enriched.append(replace(item, metadata=metadata))
+    return enriched
+
+
+def _published_at_from_article_html(html: str) -> tuple[datetime | None, str | None]:
+    soup = BeautifulSoup(html, "html.parser")
+
+    jsonld_date = _published_at_from_jsonld(soup)
+    if jsonld_date:
+        return jsonld_date, "json_ld"
+
+    for meta in soup.find_all("meta"):
+        key = str(meta.get("property") or meta.get("name") or meta.get("itemprop") or "").strip().lower()
+        if key not in ARTICLE_DATE_META_KEYS:
+            continue
+        parsed = _date_from_raw_value(meta.get("content"))
+        if parsed:
+            return parsed, f"meta:{key}"
+
+    for time_tag in soup.find_all("time"):
+        parsed = _date_from_raw_value(time_tag.get("datetime") or time_tag.get_text(" ", strip=True))
+        if parsed:
+            return parsed, "time"
+
+    for text in soup.stripped_strings:
+        parsed = _date_from_visible_metadata_text(text)
+        if parsed:
+            return parsed, "visible_text"
+
+    return None, None
+
+
+def _published_at_from_jsonld(soup: BeautifulSoup) -> datetime | None:
+    for script in soup.find_all("script", attrs={"type": "application/ld+json"}):
+        raw = script.string or script.get_text()
+        if not raw:
+            continue
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        parsed = _published_at_from_jsonld_payload(payload)
+        if parsed:
+            return parsed
+    return None
+
+
+def _published_at_from_jsonld_payload(payload: object) -> datetime | None:
+    if isinstance(payload, list):
+        for item in payload:
+            parsed = _published_at_from_jsonld_payload(item)
+            if parsed:
+                return parsed
+        return None
+    if not isinstance(payload, dict):
+        return None
+
+    for key in ("datePublished", "dateCreated", "uploadDate", "dateModified"):
+        parsed = _date_from_raw_value(payload.get(key))
+        if parsed:
+            return parsed
+
+    for nested_key in ("@graph", "mainEntity", "mainEntityOfPage"):
+        parsed = _published_at_from_jsonld_payload(payload.get(nested_key))
+        if parsed:
+            return parsed
+    return None
 
 
 def _looks_like_candidate(source: Source, url: str, base_domain: str, item_type: ItemType) -> bool:
@@ -373,6 +498,32 @@ def _date_from_text(text: str) -> datetime | None:
         except ValueError:
             pass
     return None
+
+
+def _date_from_visible_metadata_text(text: str) -> datetime | None:
+    normalized = " ".join(text.split())
+    if len(normalized) > 96:
+        return None
+    if MONTH_DATE_PATTERN.match(normalized) or normalized.lower().startswith(("published ", "date ")):
+        return _date_from_text(normalized)
+    return None
+
+
+def _date_from_raw_value(raw: object) -> datetime | None:
+    if raw is None:
+        return None
+    value = str(raw).strip()
+    if not value:
+        return None
+    try:
+        return _ensure_timezone(datetime.fromisoformat(value.replace("Z", "+00:00")))
+    except ValueError:
+        pass
+    try:
+        return _ensure_timezone(parsedate_to_datetime(value))
+    except (TypeError, ValueError):
+        pass
+    return _date_from_text(value)
 
 
 def _ensure_timezone(value: datetime) -> datetime:

@@ -10,7 +10,7 @@ import typer
 
 from app.artifacts import build_artifact_report, render_artifact_report_markdown
 from app.config import DATA_DIR, DB_PATH, enabled_sources
-from app.ingest.discovery import DateWindow, discover_source
+from app.ingest.discovery import DateWindow, classify_source_health, discover_source
 from app.ingest.manual import ingest_manual_directory, ingest_manual_file
 from app.ingest.rss import ingest_discovered_articles, ingest_discovered_podcast_pages
 from app.ingest.transcript import UseTranscribeClient, write_transcript_raw_artifact
@@ -124,6 +124,7 @@ def _run_ingest(
         urls_attempted = _source_urls(configured)
         source_artifacts = []
         item_count = 0
+        source_health = "not_checked"
         if run_context:
             run_context.event(
                 "ingest",
@@ -141,10 +142,12 @@ def _run_ingest(
             elif adapter in {"rss_or_html", "html_index"}:
                 discovered = discover_source(configured, window, limit=5)
                 item_count = len(discovered)
+                source_health = classify_source_health(configured, discovered)
                 source_artifacts = ingest_discovered_articles(configured, discovered, DATA_DIR / "raw", run_context=run_context)
             elif adapter == "podcast_episode_page_or_youtube":
                 discovered = discover_source(configured, window, limit=5)
                 item_count = len(discovered)
+                source_health = classify_source_health(configured, discovered)
                 source_artifacts = ingest_discovered_podcast_pages(
                     configured,
                     discovered,
@@ -190,7 +193,7 @@ def _run_ingest(
                 outcome = "blocked_auth"
                 retryability = "operator_action_required"
             if run_context:
-                metadata = {"created": source_created, "skipped_items": len(skipped_item_events)}
+                metadata = {"created": source_created, "skipped_items": len(skipped_item_events), "source_health": source_health}
                 if skipped_item_events:
                     metadata["skipped_item_urls"] = [event.url for event in skipped_item_events if event.url]
                     metadata["skipped_item_outcomes"] = [
