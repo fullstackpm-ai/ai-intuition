@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from pathlib import Path
 
 from app.models import ExtractedInsight, WeeklyBrief
@@ -10,6 +11,11 @@ from app.time import now_utc
 def build_weekly_brief(week: str, insights: list[ExtractedInsight], output_dir: Path) -> tuple[WeeklyBrief, Path]:
     accepted = [insight for insight in insights if insight.status == "accepted"]
     review = [insight for insight in insights if insight.status == "needs_human_review"]
+    extraction_provenance = dict(Counter(insight.extraction_method for insight in accepted))
+    risky_methods = sorted(method for method in extraction_provenance if method in {"mock", "legacy"})
+    extraction_warning = None
+    if risky_methods:
+        extraction_warning = f"Accepted insights include {', '.join(risky_methods)} extraction provenance; treat this brief as not fully source-grounded."
     thesis = "Durable AI intuition comes from mechanisms, boundaries, and structural controls rather than summaries."
     brief = WeeklyBrief(
         week=week,
@@ -26,6 +32,8 @@ def build_weekly_brief(week: str, insights: list[ExtractedInsight], output_dir: 
         ignored_noise=[insight.discard_reason for insight in insights if insight.status == "rejected" and insight.discard_reason],
         source_rollup=[f"{insight.source_id}: {insight.source_title}" for insight in accepted],
         human_review_flags=[insight.claim for insight in review],
+        extraction_provenance=extraction_provenance,
+        extraction_warning=extraction_warning,
     )
     body = render_weekly_brief_markdown(brief)
     destination = output_dir / f"{week}.md"
@@ -36,6 +44,8 @@ def build_weekly_brief(week: str, insights: list[ExtractedInsight], output_dir: 
             "generated_at": brief.generated_at.isoformat(),
             "accepted_insights": len(accepted),
             "human_review_flags": len(review),
+            "extraction_provenance": extraction_provenance,
+            "extraction_warning": extraction_warning,
         },
         body,
     )
@@ -50,9 +60,17 @@ def render_weekly_brief_markdown(brief: WeeklyBrief) -> str:
         "",
         brief.one_line_thesis,
         "",
-        "## 3 belief updates",
+        "## Extraction provenance",
         "",
     ]
+    lines.extend(_bullets([f"{method}: {count}" for method, count in sorted(brief.extraction_provenance.items())] or ["No accepted insights."]))
+    if brief.extraction_warning:
+        lines.extend(["", f"Warning: {brief.extraction_warning}"])
+    lines.extend([
+        "",
+        "## 3 belief updates",
+        "",
+    ])
     lines.extend(_numbered(brief.belief_updates))
     lines.extend(["", "## New or updated mental models", ""])
     lines.extend(_bullets(brief.new_or_updated_mental_models))

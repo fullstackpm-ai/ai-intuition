@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from enum import Enum
 from pathlib import Path
 from typing import Annotated
 
@@ -13,17 +14,28 @@ from app.ingest.rss import ingest_podcast_episode_pages, ingest_rss_or_html_sour
 from app.ingest.transcript import UseTranscribeClient, write_transcript_raw_artifact
 from app.llm.belief_update import update_beliefs
 from app.llm.edit import edit_insights
-from app.llm.extract import extract_insights
-from app.llm.prompts import EXTRACTION_PROMPT
+from app.llm.extract import build_extraction_packet, extract_insights, import_insights_from_json
 from app.llm.synthesize import build_weekly_brief
 from app.logging import console
-from app.models import Source
+from app.models import ExtractedInsight, Source
 from app.normalize.normalize import normalize_raw_artifact
 from app.store.db import StateStore
 from app.store.files import ensure_data_dirs, read_json, write_json
 from app.time import current_week, now_local, parse_since
 
 app = typer.Typer(help="AI Intuition Compiler CLI")
+
+
+class ExtractionMode(str, Enum):
+    mock = "mock"
+    api = "api"
+    codex_packet = "codex_packet"
+
+
+class ImportExtractionMethod(str, Enum):
+    api = "api"
+    codex_packet = "codex_packet"
+    manual = "manual"
 
 
 def _manual_source() -> Source:
@@ -38,6 +50,25 @@ def _store() -> StateStore:
     store = StateStore(DB_PATH)
     store.upsert_sources(enabled_sources())
     return store
+
+
+def _write_insight_artifacts(insights: list[ExtractedInsight]) -> None:
+    by_item: dict[str, list[object]] = {}
+    rejected_by_item: dict[str, list[object]] = {}
+    for insight in insights:
+        target = rejected_by_item if insight.status == "rejected" else by_item
+        target.setdefault(insight.item_id, []).append(insight.model_dump(mode="json"))
+    for item_id, payload in by_item.items():
+        write_json(DATA_DIR / "extracted" / f"{item_id}.json", payload)
+    for item_id, payload in rejected_by_item.items():
+        write_json(DATA_DIR / "rejected" / f"{item_id}.json", payload)
+
+
+def _write_extraction_packet(item_id: str, body: str) -> Path:
+    path = DATA_DIR / "extraction-packets" / f"{item_id}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body + "\n")
+    return path
 
 
 @app.command()
@@ -131,24 +162,30 @@ def normalize(
 def extract(
     since: Annotated[str, typer.Option(help="Currently accepted for command compatibility.")] = "7d",
     item: Annotated[str | None, typer.Option(help="Normalized item id to extract.")] = None,
-    mock_llm: Annotated[bool, typer.Option(help="Use deterministic mocked LLM support.")] = True,
+    mode: Annotated[ExtractionMode, typer.Option(help="Extraction mode: mock for tests, codex_packet for Codex harness, api for future API-backed extraction.")] = ExtractionMode.mock,
 ) -> None:
-    """Run extraction prompt plumbing over normalized items."""
+    """Extract insights or write Codex-ready extraction packets."""
     store = _store()
     count = 0
     try:
+        if mode == ExtractionMode.api:
+            raise typer.BadParameter("API extraction is not implemented yet. Use --mode codex_packet or --mode mock.")
         for normalized in store.list_normalized(item):
-            insights = extract_insights(normalized)
-            accepted_path = DATA_DIR / "extracted" / f"{normalized.id}.json"
-            rejected_path = DATA_DIR / "rejected" / f"{normalized.id}.json"
-            write_json(accepted_path, [insight.model_dump(mode="json") for insight in insights if insight.status != "rejected"])
-            write_json(rejected_path, [insight.model_dump(mode="json") for insight in insights if insight.status == "rejected"])
+            if mode == ExtractionMode.codex_packet:
+                _write_extraction_packet(normalized.id, build_extraction_packet(normalized))
+                count += 1
+                continue
+            insights = extract_insights(normalized, extraction_method="mock")
+            _write_insight_artifacts(insights)
             store.upsert_insights(insights)
             count += len(insights)
-        store.log_run("extract", {"since": since, "item": item, "mock_llm": mock_llm, "count": count})
+        store.log_run("extract", {"since": since, "item": item, "mode": mode.value, "count": count})
     finally:
         store.close()
-    console.print(f"Extracted {count} insight candidate(s).")
+    if mode == ExtractionMode.codex_packet:
+        console.print(f"Wrote {count} extraction packet(s).")
+    else:
+        console.print(f"Extracted {count} insight candidate(s).")
 
 
 @app.command("extract-packet")
@@ -160,54 +197,38 @@ def extract_packet(
     count = 0
     try:
         for normalized in store.list_normalized(item):
-            schema_hint = """
-Return a JSON list of ExtractedInsight-like objects using these fields:
-- claim
-- mechanism
-- intuition_update
-- mental_model
-- design_law
-- failure_mode
-- eval_pattern
-- boundary_conditions
-- counterargument
-- strategy_implication
-- learning_experiment
-- intuition_drill
-- open_question
-- evidence: [{quote, location, note}]
-- confidence: low | medium | high
-- novelty: low | medium | high
-- mental_model_impact: low | medium | high
-- discard_reason for rejected summaries
-""".strip()
-            body = "\n\n".join(
-                [
-                    f"# Extraction Packet: {normalized.title}",
-                    "## Output paths",
-                    f"- Accepted/candidate insights: `data/extracted/{normalized.id}.json`",
-                    f"- Rejected insights: `data/rejected/{normalized.id}.json`",
-                    "## Source metadata",
-                    f"- item_id: `{normalized.id}`",
-                    f"- source_id: `{normalized.source_id}`",
-                    f"- lane: `{normalized.lane}`",
-                    f"- title: `{normalized.title}`",
-                    f"- url: `{normalized.url}`",
-                    f"- published_at: `{normalized.published_at}`",
-                    "## Schema guidance",
-                    schema_hint,
-                    "## Extraction prompt",
-                    EXTRACTION_PROMPT.format(lane=normalized.lane, title=normalized.title, text=normalized.text),
-                ]
-            )
-            path = DATA_DIR / "extraction-packets" / f"{normalized.id}.md"
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(body + "\n")
+            _write_extraction_packet(normalized.id, build_extraction_packet(normalized))
             count += 1
         store.log_run("extract-packet", {"item": item, "count": count})
     finally:
         store.close()
     console.print(f"Wrote {count} extraction packet(s).")
+
+
+@app.command("import-extraction")
+def import_extraction(
+    item: Annotated[str, typer.Option(help="Normalized item id for the imported extraction.")],
+    path: Annotated[Path, typer.Option(help="JSON file containing a list of extracted insight objects.")],
+    method: Annotated[ImportExtractionMethod, typer.Option(help="Provenance for imported extraction JSON.")] = ImportExtractionMethod.codex_packet,
+) -> None:
+    """Validate and import Codex/API-authored extraction JSON into artifacts and SQLite."""
+    store = _store()
+    try:
+        matches = store.list_normalized(item)
+        if not matches:
+            raise typer.BadParameter(f"Unknown normalized item id: {item}")
+        insights = import_insights_from_json(
+            matches[0],
+            path,
+            extraction_method=method.value,
+            extraction_model="codex" if method == ImportExtractionMethod.codex_packet else method.value,
+        )
+        _write_insight_artifacts(insights)
+        store.upsert_insights(insights)
+        store.log_run("import-extraction", {"item": item, "path": str(path), "method": method.value, "count": len(insights)})
+    finally:
+        store.close()
+    console.print(f"Imported {len(insights)} insight(s).")
 
 
 @app.command()
@@ -217,15 +238,7 @@ def edit(since: Annotated[str, typer.Option(help="Currently accepted for command
     try:
         insights = store.list_insights()
         edited = edit_insights(insights)
-        by_item: dict[str, list[object]] = {}
-        rejected_by_item: dict[str, list[object]] = {}
-        for insight in edited:
-            target = rejected_by_item if insight.status == "rejected" else by_item
-            target.setdefault(insight.item_id, []).append(insight.model_dump(mode="json"))
-        for item_id, payload in by_item.items():
-            write_json(DATA_DIR / "extracted" / f"{item_id}.json", payload)
-        for item_id, payload in rejected_by_item.items():
-            write_json(DATA_DIR / "rejected" / f"{item_id}.json", payload)
+        _write_insight_artifacts(edited)
         store.upsert_insights(edited)
         store.log_run("edit", {"since": since, "count": len(edited)})
     finally:
@@ -297,11 +310,17 @@ def transcribe(
 
 
 @app.command("run-weekly")
-def run_weekly(send_email: Annotated[bool, typer.Option("--send", help="Send email after the brief.")] = False) -> None:
+def run_weekly(
+    send_email: Annotated[bool, typer.Option("--send", help="Send email after the brief.")] = False,
+    extraction_mode: Annotated[ExtractionMode, typer.Option(help="Extraction mode for the weekly run. Defaults to Codex packet mode so weekly runs do not silently create mock-derived briefs.")] = ExtractionMode.codex_packet,
+) -> None:
     """Run the local weekly pipeline without email unless explicitly requested."""
     ingest()
     normalize()
-    extract()
+    extract(mode=extraction_mode)
+    if extraction_mode == ExtractionMode.codex_packet:
+        console.print("[yellow]Skipped edit, brief, and belief update. Import real extracted insight JSON, then run edit/brief/belief-update.[/yellow]")
+        return
     edit()
     target_week = current_week()
     brief(week=target_week)

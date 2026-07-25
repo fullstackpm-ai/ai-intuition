@@ -14,6 +14,7 @@ Lane = Literal[
     "strategy_value_capture",
     "manual",
 ]
+ExtractionMethod = Literal["mock", "api", "codex_packet", "manual", "legacy"]
 
 
 class Source(BaseModel):
@@ -116,6 +117,9 @@ class ExtractedInsight(BaseModel):
     mental_model_impact: Literal["low", "medium", "high"] = "low"
     editor_notes: str | None = None
     discard_reason: str | None = None
+    extraction_method: ExtractionMethod = "legacy"
+    extraction_model: str | None = None
+    extraction_notes: str | None = None
     created_at: datetime
 
     @model_validator(mode="before")
@@ -148,6 +152,16 @@ class ExtractedInsight(BaseModel):
                 missing.append("evidence")
             if missing:
                 raise ValueError(f"accepted insight missing: {', '.join(missing)}")
+        if self.status != "rejected" and self.extraction_method in {"api", "codex_packet", "manual"}:
+            missing = []
+            if not self.source_url:
+                missing.append("source URL")
+            if not self.evidence:
+                missing.append("evidence")
+            elif not any(evidence.location for evidence in self.evidence):
+                missing.append("evidence location")
+            if missing:
+                raise ValueError(f"real extracted insight missing: {', '.join(missing)}")
         return self
 
 
@@ -166,3 +180,5 @@ class WeeklyBrief(BaseModel):
     ignored_noise: list[str]
     source_rollup: list[str]
     human_review_flags: list[str]
+    extraction_provenance: dict[str, int] = Field(default_factory=dict)
+    extraction_warning: str | None = None

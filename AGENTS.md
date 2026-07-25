@@ -38,6 +38,7 @@ Do not optimize for coverage. Optimize for surprise, mental-model impact, and re
 - If implementation pressure conflicts with a Product Spec, propose a spec revision, implementation change, Decision Trace, or reopened work; do not silently change intent.
 - Treat root `SPEC.md` as point-in-time product context unless a living doc explicitly supersedes it.
 - Do not treat generated `data/` artifacts as documentation; they are pipeline evidence and outputs.
+- Follow the artifact commit policy in `docs/living/project/processes/artifact-commit-policy.md`: raw/normalized weekly artifacts can be committed as evidence, but mock/legacy `data/extracted/`, `data/rejected/`, and questionable generated briefs should not be committed as durable knowledge.
 - Update living docs alongside code when behavior, commands, source policy, or artifact semantics change.
 
 ## Quality bar
@@ -62,6 +63,11 @@ Run tests:
 
 Run weekly pipeline:
 `uv run aic run-weekly`
+
+The default weekly run writes Codex-ready extraction packets and skips mock-derived brief generation. Use `uv run aic run-weekly --extraction-mode mock` only for deterministic fixture/testing flows.
+
+Import Codex-authored extraction JSON:
+`uv run aic import-extraction --item <normalized_item_id> --path data/extracted/<normalized_item_id>.json`
 
 Generate current brief:
 `uv run aic brief --current-week`

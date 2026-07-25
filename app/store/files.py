@@ -16,6 +16,7 @@ def ensure_data_dirs(root: Path) -> None:
         "data/raw/manual",
         "data/normalized",
         "data/extracted",
+        "data/extraction-packets",
         "data/rejected",
         "data/briefs",
         "data/beliefs",
