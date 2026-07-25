@@ -10,9 +10,9 @@
     "content_hash": "sha256:956bb5860561b3d08a4ded6586c7b83414d8875e0134db7d34610385e8900887"
   },
   "started_at": "2026-07-25T16:17:47.207Z",
-  "completed_at": "2026-07-25T16:17:50Z",
+  "completed_at": "2026-07-25T16:20:10Z",
   "status": "completed",
-  "summary": "Implemented the CI quality gate with a GitHub Actions workflow for pull requests, direct pushes to master, and manual dispatch. Added minimum permissions, locked uv installation, pytest execution, ProductSpec validation, Agent Run receipt validation, ProductSpec graph warning failure, AGENTS.md CI directives, and a regression test for the workflow contract. Local evidence: uv run pytest tests/test_ci_workflow.py -> 4 passed; uv run pytest -> 54 passed; all ProductSpec files validate; all existing Agent Run receipts validate; ProductSpec graph returns no warnings. Remote GitHub Actions evidence is recorded in the GitHub issue after push because the workflow cannot run until committed.",
+  "summary": "Implemented the CI quality gate with a GitHub Actions workflow for pull requests, direct pushes to master, and manual dispatch. Added minimum permissions, explicit Python 3.12 and Node.js 22 setup, locked uv installation, pytest execution, ProductSpec validation, Agent Run receipt validation, ProductSpec graph warning failure, AGENTS.md CI directives, and a regression test for the workflow contract. Local evidence: uv run pytest tests/test_ci_workflow.py -> 4 passed; uv run pytest -> 54 passed; all ProductSpec files validate; all Agent Run receipts validate; ProductSpec graph returns no warnings. Remote evidence: GitHub Actions run 30165400164 on commit 1832331 completed successfully in 22s at https://github.com/fullstackpm-ai/ai-intuition/actions/runs/30165400164.",
   "checked_items": [
     {
       "item_id": "AC-1",
@@ -56,11 +56,11 @@
     },
     {
       "item_id": "AC-11",
-      "status": "not_checked"
+      "status": "passed"
     },
     {
       "item_id": "SM-1",
-      "status": "not_checked"
+      "status": "passed"
     },
     {
       "item_id": "SM-2",
