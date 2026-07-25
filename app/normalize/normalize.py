@@ -36,7 +36,7 @@ def _html_to_text(html: str, source_id: str | None = None) -> str:
     pieces = []
     if title and title.get_text(strip=True):
         pieces.append(f"# {title.get_text(strip=True)}")
-    content_root = soup.find("article") if source_id == "google_research_blog" else soup
+    content_root = (soup.find("article") or soup) if source_id == "google_research_blog" else soup
     text = "\n\n".join(
         block.get_text(" ", strip=True)
         for block in content_root.find_all(["h1", "h2", "h3", "p", "li"])

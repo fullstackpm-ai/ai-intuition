@@ -129,7 +129,7 @@ def test_google_research_article_adapter_removes_utility_noise_and_keeps_article
         f"""
 <html><head><title>SymptomAI</title></head><body>
   <nav>Quick links Share Copy link</nav>
-  <article><h1>SymptomAI</h1><p>{article_words}</p><h2>Other posts of interest</h2><p>Related post noise.</p></article>
+  <main><h1>SymptomAI</h1><p>{article_words}</p><h2>Other posts of interest</h2><p>Related post noise.</p></main>
   <footer>Labels: AI</footer>
 </body></html>
 """
