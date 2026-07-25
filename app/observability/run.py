@@ -32,6 +32,8 @@ EventType = Literal[
     "item_skipped",
     "artifact_written",
     "artifact_unchanged",
+    "extraction_skipped",
+    "quality_checked",
     "fallback_attempted",
     "fallback_succeeded",
     "fallback_failed",

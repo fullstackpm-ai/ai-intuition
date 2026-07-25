@@ -237,6 +237,26 @@ def _run_normalize(store: StateStore, since: str = "7d", item: str | None = None
         store.upsert_normalized(normalized)
         count += 1
         if run_context:
+            run_context.event(
+                "normalize",
+                "quality_checked",
+                "Normalized artifact quality checked.",
+                level="warning" if normalized.quality_status != "usable" else "info",
+                source_id=normalized.source_id,
+                artifact_id=normalized.id,
+                artifact_path=normalized.normalized_path,
+                metadata={
+                    "detected_page_type": normalized.detected_page_type,
+                    "primary_content_kind": normalized.primary_content_kind,
+                    "selected_normalizer": normalized.selected_normalizer,
+                    "quality_status": normalized.quality_status,
+                    "quality_flags": normalized.quality_flags,
+                    "degraded_reason": normalized.degraded_reason,
+                    "duplicate_line_ratio": normalized.duplicate_line_ratio,
+                    "boilerplate_ratio": normalized.boilerplate_ratio,
+                    "word_count": normalized.word_count,
+                },
+            )
             run_context.record_artifact("normalize", normalized.normalized_path, normalized.id, True)
     store.log_run("normalize", {"since": since, "item": item, "count": count})
     return count
@@ -253,6 +273,25 @@ def _run_extract(
     if mode == ExtractionMode.api:
         raise typer.BadParameter("API extraction is not implemented yet. Use --mode codex_packet or --mode mock.")
     for normalized in store.list_normalized(item):
+        if not normalized.extraction_eligible:
+            if run_context:
+                run_context.event(
+                    "extract",
+                    "extraction_skipped",
+                    "Skipped degraded or rejected normalized artifact.",
+                    level="warning",
+                    source_id=normalized.source_id,
+                    artifact_id=normalized.id,
+                    artifact_path=normalized.normalized_path,
+                    metadata={
+                        "quality_status": normalized.quality_status,
+                        "quality_flags": normalized.quality_flags,
+                        "degraded_reason": normalized.degraded_reason,
+                        "detected_page_type": normalized.detected_page_type,
+                        "primary_content_kind": normalized.primary_content_kind,
+                    },
+                )
+            continue
         if mode == ExtractionMode.codex_packet:
             path, changed = _write_extraction_packet(normalized.id, build_extraction_packet(normalized))
             count += 1
@@ -409,6 +448,8 @@ def extract_packet(
     count = 0
     try:
         for normalized in store.list_normalized(item):
+            if not normalized.extraction_eligible:
+                continue
             _write_extraction_packet(normalized.id, build_extraction_packet(normalized))
             count += 1
         store.log_run("extract-packet", {"item": item, "count": count})

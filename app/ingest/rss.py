@@ -7,8 +7,13 @@ from urllib.parse import urlparse
 import httpx
 
 from app.ingest.discovery import DateWindow, DiscoveredItem, discover_source
-from app.ingest.html import ingest_html_url
-from app.ingest.substack import extract_youtube_urls_from_substack_html, ingest_substack_transcript_url
+from app.ingest.html import ingest_html_url, write_html_raw_artifact
+from app.ingest.substack import (
+    extract_substack_transcript_candidates,
+    extract_youtube_urls_from_substack_html,
+    ingest_substack_media_transcript_url,
+    ingest_substack_transcript_url,
+)
 from app.ingest.transcript import UseTranscribeClient, write_transcript_raw_artifact
 from app.logging import console
 from app.models import RawArtifact, Source
@@ -26,6 +31,9 @@ def ingest_discovered_articles(
         if item.item_type != "article":
             continue
         try:
+            if _should_try_substack_media_pipeline(source, item):
+                artifacts.append(_ingest_substack_article_or_media(source, item, raw_root, run_context))
+                continue
             artifacts.append(
                 ingest_html_url(
                     source,
@@ -69,6 +77,164 @@ def ingest_discovered_articles(
     return artifacts
 
 
+def _should_try_substack_media_pipeline(source: Source, item: DiscoveredItem) -> bool:
+    if source.id not in {"lenny_newsletter", "lenny_podcast", "dwarkesh_podcast"}:
+        return False
+    return "substack.com" in urlparse(item.url).netloc or "lennysnewsletter.com" in urlparse(item.url).netloc or "dwarkesh.com" in urlparse(item.url).netloc
+
+
+def _ingest_substack_article_or_media(
+    source: Source,
+    item: DiscoveredItem,
+    raw_root: Path,
+    run_context: RunContext | None = None,
+) -> RawArtifact:
+    response = httpx.get(item.url, follow_redirects=True, timeout=30)
+    response.raise_for_status()
+    candidates = extract_substack_transcript_candidates(response.text)
+    if candidates:
+        if run_context:
+            run_context.event(
+                "ingest",
+                "fallback_attempted",
+                "Trying first-party Substack transcript/captions.",
+                source=source,
+                url=item.url,
+                metadata={"fallback": "substack_media_transcript", "candidate_count": len(candidates)},
+            )
+        try:
+            artifact = ingest_substack_media_transcript_url(
+                source,
+                item.url,
+                raw_root,
+                response.text,
+                title=item.title,
+                published_at=item.published_at,
+            )
+            if run_context:
+                run_context.event(
+                    "ingest",
+                    "fallback_succeeded",
+                    "First-party Substack transcript/captions succeeded.",
+                    source=source,
+                    url=item.url,
+                    metadata={"fallback": "substack_media_transcript"},
+                )
+            return artifact
+        except ValueError as exc:
+            if run_context:
+                run_context.event(
+                    "ingest",
+                    "fallback_failed",
+                    "First-party Substack transcript/captions failed.",
+                    level="warning",
+                    source=source,
+                    url=item.url,
+                    metadata={"fallback": "substack_media_transcript", "error": str(exc)},
+                )
+            console.print(f"[yellow]Substack media transcript skipped {item.url}: {exc}[/yellow]")
+
+    youtube_urls = extract_youtube_urls_from_substack_html(response.text)
+    for youtube_url in youtube_urls:
+        if run_context:
+            run_context.event(
+                "ingest",
+                "fallback_attempted",
+                "Trying embedded YouTube transcript via useTranscribe.",
+                source=source,
+                url=youtube_url,
+                metadata={"episode_url": item.url, "fallback": "youtube_usetranscribe"},
+            )
+        try:
+            result = UseTranscribeClient().transcribe_youtube_url(youtube_url)
+            result = replace(result, published_at=result.published_at or item.published_at)
+            if run_context:
+                run_context.event(
+                    "ingest",
+                    "fallback_succeeded",
+                    "Embedded YouTube transcript succeeded.",
+                    source=source,
+                    url=youtube_url,
+                    metadata={"episode_url": item.url, "fallback": "youtube_usetranscribe"},
+                )
+            return write_transcript_raw_artifact(result, source, raw_root)
+        except RuntimeError as exc:
+            if run_context:
+                outcome, retryability, error = classify_exception(exc)
+                run_context.event(
+                    "ingest",
+                    "fallback_failed",
+                    "Embedded YouTube transcript failed.",
+                    level="warning",
+                    source=source,
+                    url=youtube_url,
+                    metadata={
+                        "episode_url": item.url,
+                        "fallback": "youtube_usetranscribe",
+                        "outcome": outcome,
+                        "retryability": retryability,
+                        "error": error.model_dump(mode="json"),
+                    },
+                )
+            console.print(f"[yellow]useTranscribe skipped {youtube_url}: {exc}[/yellow]")
+
+    try:
+        if run_context:
+            run_context.event(
+                "ingest",
+                "fallback_attempted",
+                "Trying visible Substack transcript section.",
+                source=source,
+                url=item.url,
+                metadata={"fallback": "substack_visible_transcript"},
+            )
+        artifact = ingest_substack_transcript_url(
+            source,
+            item.url,
+            raw_root,
+            title=item.title,
+            published_at=item.published_at,
+        )
+        if run_context:
+            run_context.event(
+                "ingest",
+                "fallback_succeeded",
+                "Visible Substack transcript section succeeded.",
+                source=source,
+                url=item.url,
+                metadata={"fallback": "substack_visible_transcript"},
+            )
+        return artifact
+    except ValueError:
+        pass
+
+    metadata = {
+        **item.metadata,
+        "detected_page_type": "hybrid_media_post" if candidates or youtube_urls else "article_page",
+        "primary_content_kind": "show_notes" if candidates or youtube_urls else "article_body",
+        "selected_normalizer": "substack_show_notes_fallback" if candidates or youtube_urls else "generic_html",
+        "classification_confidence": 0.7 if candidates or youtube_urls else 0.5,
+        "classification_signals": [
+            signal
+            for signal in ["substack_media_transcript_metadata" if candidates else "", "embedded_youtube" if youtube_urls else ""]
+            if signal
+        ],
+        "quality_status": "degraded" if candidates or youtube_urls else "usable",
+        "degraded_reason": "Transcript-capable Substack media was detected but transcript fallbacks failed; only show notes were stored."
+        if candidates or youtube_urls
+        else None,
+    }
+    return write_html_raw_artifact(
+        source,
+        item.url,
+        response.text,
+        raw_root,
+        title=item.title,
+        published_at=item.published_at,
+        metadata=metadata,
+    )
+
+
 def _should_skip_blocked_article(source: Source, item: DiscoveredItem, exc: httpx.HTTPStatusError) -> bool:
     if source.id != "openai_news":
         return False
@@ -105,6 +271,48 @@ def _ingest_podcast_episode_page(
 ) -> RawArtifact:
     response = httpx.get(item.url, follow_redirects=True, timeout=30)
     response.raise_for_status()
+    candidates = extract_substack_transcript_candidates(response.text)
+    if candidates:
+        if run_context:
+            run_context.event(
+                "ingest",
+                "fallback_attempted",
+                "Trying first-party Substack transcript/captions.",
+                source=source,
+                url=item.url,
+                metadata={"fallback": "substack_media_transcript", "candidate_count": len(candidates)},
+            )
+        try:
+            artifact = ingest_substack_media_transcript_url(
+                source,
+                item.url,
+                raw_root,
+                response.text,
+                title=item.title,
+                published_at=item.published_at,
+            )
+            if run_context:
+                run_context.event(
+                    "ingest",
+                    "fallback_succeeded",
+                    "First-party Substack transcript/captions succeeded.",
+                    source=source,
+                    url=item.url,
+                    metadata={"fallback": "substack_media_transcript"},
+                )
+            return artifact
+        except ValueError as exc:
+            if run_context:
+                run_context.event(
+                    "ingest",
+                    "fallback_failed",
+                    "First-party Substack transcript/captions failed.",
+                    level="warning",
+                    source=source,
+                    url=item.url,
+                    metadata={"fallback": "substack_media_transcript", "error": str(exc)},
+                )
+            console.print(f"[yellow]Substack media transcript skipped {item.url}: {exc}[/yellow]")
     youtube_urls = extract_youtube_urls_from_substack_html(response.text)
     for youtube_url in youtube_urls:
         if run_context:

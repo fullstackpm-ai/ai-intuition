@@ -28,6 +28,18 @@ def ingest_html_url(
     metadata: dict[str, object] | None = None,
 ) -> RawArtifact:
     html = fetch_html(url)
+    return write_html_raw_artifact(source, url, html, raw_root, title=title, published_at=published_at, metadata=metadata)
+
+
+def write_html_raw_artifact(
+    source: Source,
+    url: str,
+    html: str,
+    raw_root: Path,
+    title: str | None = None,
+    published_at: datetime | None = None,
+    metadata: dict[str, object] | None = None,
+) -> RawArtifact:
     inferred_title = title or url.rstrip("/").split("/")[-1].replace("-", " ").title() or source.name
     digest = content_hash(html)
     artifact_id = deterministic_id(source.id, inferred_title, published_at, html)

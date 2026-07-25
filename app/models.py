@@ -15,6 +15,26 @@ Lane = Literal[
     "manual",
 ]
 ExtractionMethod = Literal["mock", "api", "codex_packet", "manual", "legacy"]
+DetectedPageType = Literal[
+    "article_page",
+    "podcast_episode_page",
+    "video_episode_page",
+    "hybrid_media_post",
+    "partial_paywalled_page",
+    "noisy_index_or_nav_page",
+    "unknown_degraded_page",
+]
+PrimaryContentKind = Literal[
+    "article_body",
+    "full_transcript",
+    "caption_transcript",
+    "full_feed_content",
+    "show_notes",
+    "preview_teaser",
+    "paywall_copy",
+    "diagnostic_stub",
+]
+QualityStatus = Literal["usable", "degraded", "rejected", "needs_human_review"]
 
 
 class Source(BaseModel):
@@ -85,6 +105,20 @@ class NormalizedItem(BaseModel):
     text: str
     word_count: int
     extraction_notes: str | None = None
+    detected_page_type: DetectedPageType | None = None
+    primary_content_kind: PrimaryContentKind | None = None
+    selected_normalizer: str | None = None
+    classification_confidence: float | None = None
+    classification_signals: list[str] = Field(default_factory=list)
+    quality_status: QualityStatus = "usable"
+    quality_flags: list[str] = Field(default_factory=list)
+    degraded_reason: str | None = None
+    duplicate_line_ratio: float = 0.0
+    boilerplate_ratio: float = 0.0
+
+    @property
+    def extraction_eligible(self) -> bool:
+        return self.quality_status == "usable"
 
 
 class Evidence(BaseModel):

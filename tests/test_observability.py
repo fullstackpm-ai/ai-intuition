@@ -10,7 +10,7 @@ from typer.testing import CliRunner
 from app import cli
 from app.ingest.discovery import DiscoveredItem
 from app.ingest.rss import ingest_discovered_articles
-from app.models import RawArtifact, Source
+from app.models import NormalizedItem, RawArtifact, Source
 from app.observability.run import RunContext, classify_exception
 from app.store.db import StateStore
 
@@ -285,3 +285,46 @@ def test_openai_news_ingest_skips_blocked_article_and_continues(tmp_path, monkey
     assert skipped[0].url == "https://openai.com/index/blocked"
     assert skipped[0].metadata["outcome"] == "blocked_auth"
     assert skipped[0].metadata["retryability"] == "operator_action_required"
+
+
+def test_extract_skips_rejected_normalized_artifacts_with_diagnostics(tmp_path, monkeypatch) -> None:
+    data_dir = tmp_path / "data"
+    db_path = data_dir / "state.sqlite3"
+    monkeypatch.setattr(cli, "DATA_DIR", data_dir)
+    monkeypatch.setattr(cli, "DB_PATH", db_path)
+    store = StateStore(db_path)
+    item = NormalizedItem(
+        id="paywall",
+        raw_artifact_id="paywall",
+        source_id="stratechery",
+        source_name="Stratechery",
+        source_type="html",
+        lane="strategy_value_capture",
+        title="Paywalled article",
+        url="https://stratechery.com/2026/example",
+        published_at=datetime(2026, 7, 24, tzinfo=UTC),
+        raw_path="data/raw/lab-posts/paywall.html",
+        normalized_path=str(data_dir / "normalized/paywall.md"),
+        text="Subscribe to Stratechery Plus for full access.",
+        word_count=7,
+        detected_page_type="partial_paywalled_page",
+        primary_content_kind="paywall_copy",
+        selected_normalizer="stratechery_paywall_detector",
+        quality_status="rejected",
+        quality_flags=["paywall_dominant"],
+        degraded_reason="Paywall copy.",
+    )
+    context = RunContext("test-extract-skip", data_dir, run_id="extract-skip")
+    context.start()
+    try:
+        store.upsert_normalized(item)
+        count = cli._run_extract(store, mode=cli.ExtractionMode.codex_packet, run_context=context)
+    finally:
+        store.close()
+
+    assert count == 0
+    assert not (data_dir / "extraction-packets/paywall.md").exists()
+    skipped = [event for event in context.events if event.event_type == "extraction_skipped"]
+    assert len(skipped) == 1
+    assert skipped[0].metadata["quality_status"] == "rejected"
+    assert skipped[0].metadata["quality_flags"] == ["paywall_dominant"]

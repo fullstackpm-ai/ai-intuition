@@ -208,6 +208,13 @@ def write_transcript_raw_artifact(result: TranscriptResult, source: Source, raw_
             "pipeline_version": result.pipeline_version,
             "sections": result.sections,
             "chat_pills": result.chat_pills,
+            "transcript_provider": "usetranscribe",
+            "detected_page_type": "podcast_episode_page",
+            "primary_content_kind": "full_transcript",
+            "selected_normalizer": "markdown_transcript",
+            "classification_confidence": 0.9,
+            "classification_signals": ["usetranscribe_transcript"],
+            "quality_status": "usable",
         },
         body,
     )
@@ -231,6 +238,13 @@ def write_transcript_raw_artifact(result: TranscriptResult, source: Source, raw_
             "pipeline_version": result.pipeline_version,
             "sections": result.sections,
             "chat_pills": result.chat_pills,
+            "transcript_provider": "usetranscribe",
+            "detected_page_type": "podcast_episode_page",
+            "primary_content_kind": "full_transcript",
+            "selected_normalizer": "markdown_transcript",
+            "classification_confidence": 0.9,
+            "classification_signals": ["usetranscribe_transcript"],
+            "quality_status": "usable",
         },
     )
 
