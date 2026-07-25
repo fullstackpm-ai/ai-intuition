@@ -1,9 +1,12 @@
 ---
-id: stratechery_2026-07-20_who-s-afraid-of-chinese-models_8c140d58
+id: stratechery_2026-07-20_who-s-afraid-of-chinese-models_d03bc8e6
 lane: strategy_value_capture
 published_at: '2026-07-20T11:00:08+00:00'
-raw_artifact_id: stratechery_2026-07-20_who-s-afraid-of-chinese-models_8c140d58
+raw_artifact_id: stratechery_2026-07-20_who-s-afraid-of-chinese-models_d03bc8e6
+raw_path: data/raw/lab-posts/stratechery_2026-07-20_who-s-afraid-of-chinese-models_d03bc8e6.html
 source_id: stratechery
+source_name: Stratechery
+source_type: html
 title: Who’s Afraid of Chinese Models?
 url: https://stratechery.com/2026/whos-afraid-of-chinese-models/
 ---

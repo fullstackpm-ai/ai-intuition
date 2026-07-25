@@ -1,9 +1,9 @@
 ---
-id: google_research_blog_2026-07-22_towards-a-quantum-computer-that-learns-from-its-errors-machine-intellige_38da4052
+id: google_research_blog_2026-07-22_towards-a-quantum-computer-that-learns-from-its-errors-machine-intellige_0d92c8d3
 lane: frontier_primitives
 published_at: '2026-07-22T00:00:00+00:00'
-raw_artifact_id: google_research_blog_2026-07-22_towards-a-quantum-computer-that-learns-from-its-errors-machine-intellige_38da4052
-raw_path: data/raw/lab-posts/google_research_blog_2026-07-22_towards-a-quantum-computer-that-learns-from-its-errors-machine-intellige_38da4052.html
+raw_artifact_id: google_research_blog_2026-07-22_towards-a-quantum-computer-that-learns-from-its-errors-machine-intellige_0d92c8d3
+raw_path: data/raw/lab-posts/google_research_blog_2026-07-22_towards-a-quantum-computer-that-learns-from-its-errors-machine-intellige_0d92c8d3.html
 source_id: google_research_blog
 source_name: Google Research Blog
 source_type: html

@@ -1,9 +1,9 @@
 ---
-id: lenny_newsletter_2026-07-24_claude-opus-5-review-this-model-is-brilliant-but-annoying_522c2fa8
+id: lenny_newsletter_2026-07-24_claude-opus-5-review-this-model-is-brilliant-but-annoying_aa09b117
 lane: product_patterns
 published_at: '2026-07-24T17:15:25+00:00'
-raw_artifact_id: lenny_newsletter_2026-07-24_claude-opus-5-review-this-model-is-brilliant-but-annoying_522c2fa8
-raw_path: data/raw/lab-posts/lenny_newsletter_2026-07-24_claude-opus-5-review-this-model-is-brilliant-but-annoying_522c2fa8.html
+raw_artifact_id: lenny_newsletter_2026-07-24_claude-opus-5-review-this-model-is-brilliant-but-annoying_aa09b117
+raw_path: data/raw/lab-posts/lenny_newsletter_2026-07-24_claude-opus-5-review-this-model-is-brilliant-but-annoying_aa09b117.html
 source_id: lenny_newsletter
 source_name: Lenny's Newsletter
 source_type: html

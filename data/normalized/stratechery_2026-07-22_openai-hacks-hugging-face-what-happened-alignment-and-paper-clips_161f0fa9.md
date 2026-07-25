@@ -1,14 +1,17 @@
 ---
-id: stratechery_2026-07-21_netflix-earnings-is-netflix-washed-additional-notes_e3a2713b
+id: stratechery_2026-07-22_openai-hacks-hugging-face-what-happened-alignment-and-paper-clips_161f0fa9
 lane: strategy_value_capture
-published_at: '2026-07-21T10:00:00+00:00'
-raw_artifact_id: stratechery_2026-07-21_netflix-earnings-is-netflix-washed-additional-notes_e3a2713b
+published_at: '2026-07-22T10:00:00+00:00'
+raw_artifact_id: stratechery_2026-07-22_openai-hacks-hugging-face-what-happened-alignment-and-paper-clips_161f0fa9
+raw_path: data/raw/lab-posts/stratechery_2026-07-22_openai-hacks-hugging-face-what-happened-alignment-and-paper-clips_161f0fa9.html
 source_id: stratechery
-title: Netflix Earnings, Is Netflix Washed?, Additional Notes
-url: https://stratechery.com/2026/netflix-earnings-is-netflix-washed-additional-notes/
+source_name: Stratechery
+source_type: html
+title: OpenAI Hacks Hugging Face, What Happened, Alignment and Paper Clips
+url: https://stratechery.com/2026/openai-hacks-hugging-face-what-happened-alignment-and-paper-clips/
 ---
 
-# Netflix Earnings, Is Netflix Washed?, Additional Notes – Stratechery by Ben Thompson
+# OpenAI Hacks Hugging Face, What Happened, Alignment and Paper Clips – Stratechery by Ben Thompson
 
 Stratechery Plus
 
@@ -22,11 +25,11 @@ Latest Podcast
 
 Emergency Pod: LeBron to the Sixers??? LeBron to the Sixers. Greatest Of All Talk | Jul 24 Emergency Pod: LeBron to the Sixers??? LeBron to the Sixers.
 
-Netflix Earnings, Is Netflix Washed?, Additional Notes
+OpenAI Hacks Hugging Face, What Happened, Alignment and Paper Clips
 
 Listen to Podcast
 
-Netflix’s earnings were fine, and befitting a mature company whose most exciting days are likely behind them.
+OpenAI accidentally hacked Hugging Face, but the takeaways are more encouraging than people realize.
 
 Subscribe to Stratechery Plus for full access.
 

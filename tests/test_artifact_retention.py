@@ -110,6 +110,24 @@ def test_untracked_rerun_siblings_are_recommended_for_deletion(tmp_path, monkeyp
     assert any("11111111" in evidence for evidence in decision.evidence)
 
 
+def test_clean_rerun_replacements_are_commit_eligible(tmp_path, monkeypatch) -> None:
+    root = tmp_path
+    stale = root / "data/raw/lab-posts/source_2026-07-24_same-title_11111111.html"
+    fresh = root / "data/raw/lab-posts/source_2026-07-24_same-title_22222222.html"
+    for path in [stale, fresh]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("content")
+
+    monkeypatch.setattr("app.artifacts._tracked_data_paths", lambda root: [stale])
+
+    decisions = classify_artifacts(root, [(stale, "D"), (fresh, "??")])
+    by_path = {decision.path: decision for decision in decisions}
+
+    assert by_path["data/raw/lab-posts/source_2026-07-24_same-title_11111111.html"].recommendation == "commit"
+    assert by_path["data/raw/lab-posts/source_2026-07-24_same-title_22222222.html"].recommendation == "commit"
+    assert any("clean-rerun replacement" in evidence for evidence in by_path["data/raw/lab-posts/source_2026-07-24_same-title_22222222.html"].evidence)
+
+
 def test_artifact_report_can_render_json_and_markdown(tmp_path) -> None:
     root = tmp_path
     raw = root / "data/raw/lab-posts/source_2026-07-24_example_abcd1234.html"

@@ -95,12 +95,15 @@ def test_run_weekly_records_partial_success_and_packet_skips(tmp_path, monkeypat
     db_path = data_dir / "state.sqlite3"
     good = _source("good")
     blocked = _source("blocked")
+    week_start = datetime(2026, 7, 20, tzinfo=UTC)
+    seen_window_starts = []
 
     def fake_enabled_sources(source_id=None):
         sources = [good, blocked]
         return [source for source in sources if source_id is None or source.id == source_id]
 
     def fake_discover(source, window, limit=5):
+        seen_window_starts.append(window.start)
         if source.id == "blocked":
             raise _http_error(403)
         return [
@@ -138,6 +141,7 @@ def test_run_weekly_records_partial_success_and_packet_skips(tmp_path, monkeypat
     monkeypatch.setattr(cli, "enabled_sources", fake_enabled_sources)
     monkeypatch.setattr(cli, "discover_source", fake_discover)
     monkeypatch.setattr(cli, "ingest_discovered_articles", fake_ingest_articles)
+    monkeypatch.setattr(cli, "current_week_start", lambda: week_start)
 
     result = CliRunner().invoke(cli.app, ["run-weekly"])
 
@@ -145,9 +149,12 @@ def test_run_weekly_records_partial_success_and_packet_skips(tmp_path, monkeypat
     run_dirs = list((data_dir / "runs").iterdir())
     assert len(run_dirs) == 1
     summary = json.loads((run_dirs[0] / "summary.json").read_text())
+    manifest = json.loads((run_dirs[0] / "manifest.json").read_text())
     assert summary["source_outcomes"] == {"success": 1, "blocked_auth": 1}
     assert summary["stage_outcomes"]["skipped_config"] == 3
     assert summary["artifact_counts"]["ingest_written"] == 1
+    assert seen_window_starts == [week_start, week_start]
+    assert manifest["window"]["since"] == week_start.isoformat()
     assert summary["artifact_counts"]["extract_written"] == 1
     assert summary["failure_report_path"]
 

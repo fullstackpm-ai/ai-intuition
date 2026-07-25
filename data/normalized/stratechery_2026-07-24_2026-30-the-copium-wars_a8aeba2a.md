@@ -1,9 +1,12 @@
 ---
-id: stratechery_2026-07-24_2026-30-the-copium-wars_7c1ec8df
+id: stratechery_2026-07-24_2026-30-the-copium-wars_a8aeba2a
 lane: strategy_value_capture
 published_at: '2026-07-24T17:00:00+00:00'
-raw_artifact_id: stratechery_2026-07-24_2026-30-the-copium-wars_7c1ec8df
+raw_artifact_id: stratechery_2026-07-24_2026-30-the-copium-wars_a8aeba2a
+raw_path: data/raw/lab-posts/stratechery_2026-07-24_2026-30-the-copium-wars_a8aeba2a.html
 source_id: stratechery
+source_name: Stratechery
+source_type: html
 title: '2026.30: The Copium Wars'
 url: https://stratechery.com/2026/the-copium-wars/
 ---

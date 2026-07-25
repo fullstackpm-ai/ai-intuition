@@ -25,7 +25,7 @@ from app.normalize.normalize import normalize_raw_artifact
 from app.observability import RunContext, classify_exception
 from app.store.db import StateStore
 from app.store.files import ensure_data_dirs, read_json, write_json
-from app.time import current_week, now_local, parse_since
+from app.time import current_week, current_week_start, now_local, parse_since
 
 app = typer.Typer(help="AI Intuition Compiler CLI")
 
@@ -510,16 +510,17 @@ def run_weekly(
     extraction_mode: Annotated[ExtractionMode, typer.Option(help="Extraction mode for the weekly run. Defaults to Codex packet mode so weekly runs do not silently create mock-derived briefs.")] = ExtractionMode.codex_packet,
 ) -> None:
     """Run the local weekly pipeline without email unless explicitly requested."""
+    week_start = current_week_start()
     run_context = RunContext(
         "run-weekly",
         DATA_DIR,
-        options={"send": send_email, "extraction_mode": extraction_mode.value, "window": {"since": "7d"}},
+        options={"send": send_email, "extraction_mode": extraction_mode.value, "window": {"since": week_start.isoformat()}},
     )
     run_context.start()
     store = _store()
     try:
         with run_context.stage("ingest"):
-            created = _run_ingest(store, run_context=run_context)
+            created = _run_ingest(store, since=week_start.isoformat(), run_context=run_context)
         console.print(f"Ingested {created} new raw artifact(s).")
         with run_context.stage("normalize"):
             normalized = _run_normalize(store, run_context=run_context)

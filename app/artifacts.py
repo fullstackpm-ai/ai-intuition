@@ -93,13 +93,23 @@ def build_artifact_report(root: Path, changed_paths: list[tuple[Path, str]] | No
 
 def classify_artifacts(root: Path, path_statuses: list[tuple[Path, str]]) -> list[ArtifactDecision]:
     siblings = _same_item_siblings(root, [path for path, _ in path_statuses])
+    changed_statuses_by_key: dict[str, set[str]] = defaultdict(set)
+    for path, status in path_statuses:
+        key = _stable_item_key(root, path)
+        if key:
+            changed_statuses_by_key[key].add(status)
     decisions: list[ArtifactDecision] = []
     for path, status in path_statuses:
         decision = classify_artifact(root, path, git_status=status)
-        same_item = siblings.get(_stable_item_key(root, path), [])
+        stable_key = _stable_item_key(root, path)
+        same_item = siblings.get(stable_key, [])
         if same_item:
             decision.evidence.append(f"Possible rerun sibling(s): {', '.join(same_item)}")
-            if status == "??":
+            if _is_clean_rerun_replacement(status, changed_statuses_by_key.get(stable_key, set())):
+                decision.evidence.append("rubric=clean-rerun replacement")
+                if decision.recommendation == "commit":
+                    decision.reason = f"{decision.reason} This artifact replaces a deleted stale rerun sibling in the same change."
+            elif status == "??":
                 decision.lifecycle = "disposable"
                 decision.recommendation = "delete"
                 decision.reason = (
@@ -111,6 +121,10 @@ def classify_artifacts(root: Path, path_statuses: list[tuple[Path, str]]) -> lis
                 decision.reason = f"{decision.reason} Review possible rerun duplicate before promotion."
         decisions.append(decision)
     return decisions
+
+
+def _is_clean_rerun_replacement(status: str, sibling_statuses: set[str]) -> bool:
+    return status in {"??", "A", "D"} and "D" in sibling_statuses and bool(sibling_statuses & {"??", "A"})
 
 
 def classify_artifact(root: Path, path: Path, git_status: str = "") -> ArtifactDecision:

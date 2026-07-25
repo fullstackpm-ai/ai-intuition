@@ -1,9 +1,9 @@
 ---
-id: google_deepmind_blog_undated_sima-2-an-agent-that-plays-reasons-and-learns-with-you_304a75db
+id: google_deepmind_blog_undated_sima-2-an-agent-that-plays-reasons-and-learns-with-you_4a7ad3c2
 lane: frontier_primitives
 published_at: null
-raw_artifact_id: google_deepmind_blog_undated_sima-2-an-agent-that-plays-reasons-and-learns-with-you_304a75db
-raw_path: data/raw/lab-posts/google_deepmind_blog_undated_sima-2-an-agent-that-plays-reasons-and-learns-with-you_304a75db.html
+raw_artifact_id: google_deepmind_blog_undated_sima-2-an-agent-that-plays-reasons-and-learns-with-you_4a7ad3c2
+raw_path: data/raw/lab-posts/google_deepmind_blog_undated_sima-2-an-agent-that-plays-reasons-and-learns-with-you_4a7ad3c2.html
 source_id: google_deepmind_blog
 source_name: Google DeepMind Blog
 source_type: html

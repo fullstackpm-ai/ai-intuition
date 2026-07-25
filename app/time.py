@@ -21,6 +21,13 @@ def current_week(dt: datetime | None = None) -> str:
     return f"{year}-W{week:02d}"
 
 
+def current_week_start(dt: datetime | None = None) -> datetime:
+    value = dt or now_local()
+    if value.tzinfo is not None:
+        value = value.astimezone(LOCAL_TZ)
+    return value.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=value.weekday())
+
+
 def is_in_week(dt: datetime | None, week: str) -> bool:
     if dt is None:
         return False

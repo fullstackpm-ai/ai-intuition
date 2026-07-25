@@ -1,9 +1,9 @@
 ---
-id: anthropic_engineering_undated_featured-how-we-contain-claude-across-products-as-agents-grow-more-capab_754d5ad6
+id: anthropic_engineering_undated_featured-how-we-contain-claude-across-products-as-agents-grow-more-capab_cac28c97
 lane: product_patterns
 published_at: null
-raw_artifact_id: anthropic_engineering_undated_featured-how-we-contain-claude-across-products-as-agents-grow-more-capab_754d5ad6
-raw_path: data/raw/lab-posts/anthropic_engineering_undated_featured-how-we-contain-claude-across-products-as-agents-grow-more-capab_754d5ad6.html
+raw_artifact_id: anthropic_engineering_undated_featured-how-we-contain-claude-across-products-as-agents-grow-more-capab_cac28c97
+raw_path: data/raw/lab-posts/anthropic_engineering_undated_featured-how-we-contain-claude-across-products-as-agents-grow-more-capab_cac28c97.html
 source_id: anthropic_engineering
 source_name: Anthropic Engineering
 source_type: html
