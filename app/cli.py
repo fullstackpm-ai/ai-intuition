@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import time
+from datetime import timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Annotated
@@ -25,7 +26,7 @@ from app.normalize.normalize import normalize_raw_artifact
 from app.observability import RunContext, classify_exception
 from app.store.db import StateStore
 from app.store.files import ensure_data_dirs, read_json, write_json
-from app.time import current_week, current_week_start, now_local, parse_since
+from app.time import current_week, current_week_start, now_local, parse_since, week_bounds
 
 app = typer.Typer(help="AI Intuition Compiler CLI")
 
@@ -90,12 +91,13 @@ def _elapsed_ms(started: float) -> int:
 def _run_ingest(
     store: StateStore,
     since: str = "7d",
+    until: str | None = None,
     source: str | None = None,
     manual: Path | None = None,
     run_context: RunContext | None = None,
 ) -> int:
     created = 0
-    window = DateWindow(start=parse_since(since), end=now_local())
+    window = DateWindow(start=parse_since(since), end=parse_since(until) if until else now_local())
     if manual:
         configured = _manual_source()
         started = time.perf_counter()
@@ -115,7 +117,7 @@ def _run_ingest(
                 elapsed_ms=_elapsed_ms(started),
                 outcome="success",
             )
-        store.log_run("ingest", {"since": since, "source": source, "manual": str(manual), "created": created})
+        store.log_run("ingest", {"since": since, "until": until, "source": source, "manual": str(manual), "created": created})
         return created
 
     for configured in enabled_sources(source):
@@ -246,7 +248,7 @@ def _run_ingest(
                     error=error,
                     metadata=discovery_diagnostics,
                 )
-    store.log_run("ingest", {"since": since, "source": source, "manual": None, "created": created})
+    store.log_run("ingest", {"since": since, "until": until, "source": source, "manual": None, "created": created})
     return created
 
 
@@ -611,20 +613,38 @@ def transcribe(
 @app.command("run-weekly")
 def run_weekly(
     send_email: Annotated[bool, typer.Option("--send", help="Send email after the brief.")] = False,
+    week: Annotated[str | None, typer.Option(help="ISO week to replay, e.g. 2026-W29. Defaults to the current week.")] = None,
     extraction_mode: Annotated[ExtractionMode, typer.Option(help="Extraction mode for the weekly run. Defaults to Codex packet mode so weekly runs do not silently create mock-derived briefs.")] = ExtractionMode.codex_packet,
 ) -> None:
     """Run the local weekly pipeline without email unless explicitly requested."""
-    week_start = current_week_start()
+    if week:
+        target_week = week
+        try:
+            week_start, next_week_start = week_bounds(target_week)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc), param_hint="--week") from exc
+        if week_start > current_week_start():
+            raise typer.BadParameter("Historical replay cannot target a future week.", param_hint="--week")
+        week_end = min(next_week_start - timedelta(microseconds=1), now_local())
+    else:
+        week_start = current_week_start()
+        target_week = current_week(week_start)
+        week_end = now_local()
     run_context = RunContext(
         "run-weekly",
         DATA_DIR,
-        options={"send": send_email, "extraction_mode": extraction_mode.value, "window": {"since": week_start.isoformat()}},
+        options={
+            "send": send_email,
+            "week": target_week,
+            "extraction_mode": extraction_mode.value,
+            "window": {"since": week_start.isoformat(), "until": week_end.isoformat()},
+        },
     )
     run_context.start()
     store = _store()
     try:
         with run_context.stage("ingest"):
-            created = _run_ingest(store, since=week_start.isoformat(), run_context=run_context)
+            created = _run_ingest(store, since=week_start.isoformat(), until=week_end.isoformat(), run_context=run_context)
         console.print(f"Ingested {created} new raw artifact(s).")
         with run_context.stage("normalize"):
             normalized = _run_normalize(store, run_context=run_context)
@@ -645,7 +665,6 @@ def run_weekly(
         with run_context.stage("edit"):
             edited = _run_edit(store, run_context=run_context)
         console.print(f"Edited {edited} insight(s).")
-        target_week = current_week()
         with run_context.stage("brief", {"week": target_week}):
             path = _run_brief(store, week=target_week, run_context=run_context)
         console.print(f"Wrote {path}")

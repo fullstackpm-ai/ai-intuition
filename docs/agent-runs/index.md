@@ -25,3 +25,4 @@ See [ProductSpec directive](../living/project/processes/productspec-directive.md
 - [Weekly Run Artifact Retention and Promotion Policy](weekly-run-artifact-retention-and-promotion-policy.agent-run.json)
 - [Weekly Run Artifact Retention and Promotion Policy Revision 2](weekly-run-artifact-retention-and-promotion-policy-revision-2.agent-run.json)
 - [CI Quality Gate for Tests and ProductSpec Validation](ci-quality-gate-for-tests-and-productspec-validation.agent-run.json)
+- [Historical Weekly Replay](historical-weekly-replay.agent-run.json)

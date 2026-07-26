@@ -1,0 +1,29 @@
+{
+  "agent_run_format_version": "0.1",
+  "run_id": "historical-weekly-replay-run",
+  "agent": {
+    "name": "Codex"
+  },
+  "product_spec": {
+    "path": "docs/product-specs/historical-weekly-replay.product-spec.md",
+    "spec_revision": 1,
+    "content_hash": "sha256:9844d8007dc3771f0e5a2b0de953a6c9f21e71b863af2ae55d52eea1586d7ed3"
+  },
+  "started_at": "2026-07-25T23:30:00Z",
+  "completed_at": "2026-07-25T23:40:00Z",
+  "status": "completed",
+  "summary": "Added `aic run-weekly --week YYYY-Www` for bounded historical replays. The runner derives an America/Los_Angeles Monday start and inclusive Sunday-night endpoint, rejects invalid and future weeks before source fetch, records the target week and bounds in run diagnostics, and preserves current-week behavior when omitted. Evidence: focused tests -> 16 passed; full suite -> 94 passed; live `uv run aic run-weekly --week 2026-W29` completed successfully with 22 new raw artifacts, 13 new Codex packets, nine successful sources, four healthy-empty sources, and diagnostics at data/runs/20260725T213053Z-run-weekly-14254a. Four Codex-authored insights were imported, then `aic brief --week 2026-W29` and `aic belief-update --week 2026-W29` produced a source-grounded brief and updated the belief ledger.",
+  "checked_items": [
+    {"item_id": "AC-1", "status": "passed"},
+    {"item_id": "AC-2", "status": "passed"},
+    {"item_id": "AC-3", "status": "passed"},
+    {"item_id": "AC-4", "status": "passed"},
+    {"item_id": "AC-5", "status": "passed"},
+    {"item_id": "AC-6", "status": "passed"},
+    {"item_id": "EVAL-1", "status": "passed"},
+    {"item_id": "SM-1", "status": "not_checked"}
+  ],
+  "drift": {
+    "detected": false
+  }
+}

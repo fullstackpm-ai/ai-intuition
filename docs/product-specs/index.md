@@ -16,6 +16,7 @@ See [ProductSpec directive](../living/project/processes/productspec-directive.md
 
 - [CI Quality Gate for Tests and ProductSpec Validation](ci-quality-gate-for-tests-and-productspec-validation.product-spec.md)
 - [Deep Artifact Internalization Workflow](deep-artifact-internalization-workflow.product-spec.md)
+- [Historical Weekly Replay](historical-weekly-replay.product-spec.md)
 - [Real Sensemaking Extraction Workflow](real-sensemaking-extraction-workflow.product-spec.md)
 - [Pipeline Observability and Failure Regression Harness](pipeline-observability-and-failure-regression-harness.product-spec.md)
 - [OpenAI Research Discovery Fallback](openai-research-discovery-fallback.product-spec.md)

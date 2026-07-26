@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
+import pytest
 from typer.testing import CliRunner
 
 from app import cli
@@ -13,6 +14,7 @@ from app.ingest.rss import ingest_discovered_articles
 from app.models import NormalizedItem, RawArtifact, Source
 from app.observability.run import RunContext, classify_exception
 from app.store.db import StateStore
+from app.time import LOCAL_TZ
 
 
 def _http_error(status_code: int) -> httpx.HTTPStatusError:
@@ -172,6 +174,50 @@ def test_run_weekly_records_partial_success_and_packet_skips(tmp_path, monkeypat
 
     assert [row["outcome"] for row in attempts] == ["blocked_auth", "success"]
     assert ("edit", "skipped_config") in [(row["stage"], row["outcome"]) for row in stages]
+
+
+def test_run_weekly_historical_week_uses_bounded_window_and_records_target_week(tmp_path, monkeypatch) -> None:
+    data_dir = tmp_path / "data"
+    db_path = data_dir / "state.sqlite3"
+    source = _source("historical")
+    seen_windows = []
+
+    def fake_enabled_sources(source_id=None):
+        return [source]
+
+    def fake_discover(configured, window, limit=5):
+        seen_windows.append(window)
+        return []
+
+    monkeypatch.setattr(cli, "DATA_DIR", data_dir)
+    monkeypatch.setattr(cli, "DB_PATH", db_path)
+    monkeypatch.setattr(cli, "enabled_sources", fake_enabled_sources)
+    monkeypatch.setattr(cli, "discover_source", fake_discover)
+    monkeypatch.setattr(cli, "current_week_start", lambda: datetime(2026, 7, 20, tzinfo=UTC))
+
+    result = CliRunner().invoke(cli.app, ["run-weekly", "--week", "2026-W29"])
+
+    assert result.exit_code == 0, result.output
+    assert len(seen_windows) == 1
+    assert seen_windows[0].start == datetime(2026, 7, 13, tzinfo=LOCAL_TZ)
+    assert seen_windows[0].end == datetime(2026, 7, 19, 23, 59, 59, 999999, tzinfo=LOCAL_TZ)
+    run_dir = next((data_dir / "runs").iterdir())
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert manifest["options"]["week"] == "2026-W29"
+    assert manifest["window"] == {
+        "since": "2026-07-13T00:00:00-07:00",
+        "until": "2026-07-19T23:59:59.999999-07:00",
+    }
+
+
+@pytest.mark.parametrize("week", ["2026-W54", "2027-W01"])
+def test_run_weekly_rejects_invalid_or_future_week_before_source_fetch(tmp_path, monkeypatch, week) -> None:
+    monkeypatch.setattr(cli, "current_week_start", lambda: datetime(2026, 7, 20, tzinfo=UTC))
+    monkeypatch.setattr(cli, "enabled_sources", lambda *_args, **_kwargs: pytest.fail("source fetch should not begin"))
+
+    result = CliRunner().invoke(cli.app, ["run-weekly", "--week", week])
+
+    assert result.exit_code != 0
 
 
 def test_run_weekly_idempotent_artifact_events_on_second_run(tmp_path, monkeypatch) -> None:
